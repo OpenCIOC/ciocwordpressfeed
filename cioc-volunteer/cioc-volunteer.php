@@ -2,7 +2,7 @@
 /*
 * Plugin Name: CIOC Volunteer Feeds
 * Description: This plugin provides integration shortcodes for feeds from the CIOC Software volunteer module
-* Version: 1.0.0
+* Version: 1.0.1
 * Author: Katherine Lambacher
 * Author URI: http://www.kclsoftware.com
 * License: Apache 2.0
@@ -10,10 +10,11 @@
 
 function cioc_vol_search_feed_list($atts) {
 	$default_url = 'https://test.cioc.ca/';
+	$default_type = 'newest';
 
 	$options = shortcode_atts( array(
 			'url' => $default_url,
-			'type' => 'popular_orgs',
+			'type' => $default_type,
 			'viewtype' => NULL,
 			'ln' => NULL,
 			'list_class' => NULL,
@@ -41,7 +42,7 @@ function cioc_vol_search_feed_list($atts) {
     $action_types = array_merge($action_types_list, $action_types_records);   
    
     if (! in_array($options['type'], $action_types)) {
-    	$options['type'] = 'newest';
+    	$options['type'] = $default_type;
     }
     
     $culture_types = array('en-CA','fr-CA');
@@ -81,25 +82,36 @@ function cioc_vol_search_feed_list($atts) {
  	if (!is_null($json_data->{'error'})) {
  		$list_html = '<p>' . htmlspecialchars($json_data->{'error'}) . '</p>';
  	} elseif (in_array($options['type'], $action_types_records)) {
- 		$list_html = '<dl'
+ 		if ($options['style_me'] == 'on') {
+ 			$list_html = '<style type="text/css">'
+ 				. '.fa-cioc {width:1em; margin-right:0.25em; text-align:center;}'
+ 				. '.dt-cioc {margin-top:1.5em; margin-bottom:0.5em; font-size: 110%;}'
+ 				. '.dd-cioc {margin-left:1.5em; margin-bottom:0.5em;}'
+ 				. '.pos-duties {margin-bottom:0.75em;}'
+ 				. '.pos-org-name {font-style: italic;}'
+ 				. '</style>';
+		} else {
+			$list_html = '';
+		}
+ 		$list_html .= '<dl'
  				. ($options['list_class'] ? ' class="' . esc_attr($options['list_class']) . '"' : '')
  				. ($options['list_id'] ? ' id="' . esc_attr($options['list_id']) . '"' : '')
  				. '>';
  				foreach ($json_data->{'recordset'} AS $list_entry) {
- 					$list_html .= '<dt' . ($options['style_me'] == 'on' ? ' style="margin-top:1em; margin-bottom:0.5em; font-size: 110%;"' : '')
- 						. ' class="position_title"><a href="' . $options['url'] . urldecode($list_entry->{'search'}) . '">' 
+ 					$list_html .= '<dt class="pos-title dt-cioc"><a href="' . $options['url'] . urldecode($list_entry->{'search'}) . '">' 
  						. htmlspecialchars($list_entry->{'title'}) . '</a> (' . htmlspecialchars($list_entry->{'date'}) . ')</dt>';
  					if ($options['location'] == 'on' and $list_entry->{'location'}) {
- 						$list_html .= '<dd' . ($options['style_me'] == 'on' ? ' style="margin-left:1.5em; margin-bottom:0.5em;"' : '') . ' class="duties">'
- 							. ($options['has_fa'] == 'on' ? '<i class="fa fa-map-marker" aria-hidden="true"></i> ' : '')
+ 						$list_html .= '<dd class="pos-location dd-cioc">'
+ 							. ($options['has_fa'] == 'on' ? '<i class="fa fa-map-marker fa-cioc" aria-hidden="true"></i> ' : '')
  							. htmlspecialchars($list_entry->{'location'}) . '</dd>';
  					}
  					if ($options['org'] == 'on') {
- 						$list_html .= '<dd' . ($options['style_me'] == 'on' ? ' style="margin-left:1.5em; margin-bottom:0.5em; font-style:italic;"' : '') . ' class="organization_name">'
+ 						$list_html .= '<dd class="pos-org-name dd-cioc">'
+ 							. ($options['has_fa'] == 'on' ? '<i class="fa fa-institution fa-cioc" aria-hidden="true"></i> ' : '')
 	 						. htmlspecialchars($list_entry->{'name'}) . '</dd>';
  					}
  					if ($options['duties'] == 'on' and $list_entry->{'duties'}) {
- 						$list_html .= '<dd' . ($options['style_me'] == 'on' ? ' style="margin-left:1.5em; margin-bottom:0.5em;"' : '') . ' class="duties">'
+ 						$list_html .= '<dd class="pos-duties dd-cioc">'
  							. $list_entry->{'duties'} . '</dd>';
  					}
  				}
@@ -110,7 +122,7 @@ function cioc_vol_search_feed_list($atts) {
  			. ($options['list_id'] ? ' id="' . esc_attr($options['list_id']) . '"' : '')
  			. '>';
  		foreach ($json_data->{'recordset'} AS $list_entry) {
-	    	$list_html .= '<li><a href="' . $options['url'] . urldecode($list_entry->{'search'}) . '">' . htmlspecialchars($list_entry->{'name'}) . '</a> <span class="badge">' . htmlspecialchars($list_entry->{'count'}) . '<span></li>';
+	    	$list_html .= '<li><a href="' . $options['url'] . urldecode($list_entry->{'search'}) . '">' . htmlspecialchars($list_entry->{'name'}) . '</a> <span class="badge pos-count">' . htmlspecialchars($list_entry->{'count'}) . '<span></li>';
  		}
 	    $list_html .= '</ul>';
  	} 
