@@ -111,8 +111,7 @@ function cioc_cominfo_search_feed_list($atts) {
 		} else {
 			$list_html = '';
 		}
-		$list_html .= $fetch_url 
-			. '<dl' . ($options ['list_class'] ? ' class="' . esc_attr ( $options ['list_class'] ) . '"' : '') . ($options ['list_id'] ? ' id="' . esc_attr ( $options ['list_id'] ) . '"' : '') . '>';
+		$list_html .= '<dl' . ($options ['list_class'] ? ' class="' . esc_attr ( $options ['list_class'] ) . '"' : '') . ($options ['list_id'] ? ' id="' . esc_attr ( $options ['list_id'] ) . '"' : '') . '>';
 		
 		foreach ( $json_data->{'recordset'} as $list_entry ) {
 			$list_html .= '<dt class="org-name dt-cioc">'
