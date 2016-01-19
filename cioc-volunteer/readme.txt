@@ -6,11 +6,11 @@ Stable tag: trunk
 License: Apache 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0
 
-This plugin provides integration shortcodes for feeds from the CIOC Software Community Information module
+This plugin provides integration shortcodes for feeds from the CIOC Software Volunteer Opportunity module
 
 == Description ==
 
-This plugin provides integration shortcodes for feeds from the CIOC Software Community Information module. For more information visit http://www.opencioc.org
+This plugin provides integration shortcodes for feeds from the CIOC Software Volunteer Opportunity module. For more information visit http://www.opencioc.org
 
 == Installation ==
 
