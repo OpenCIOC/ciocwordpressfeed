@@ -26,6 +26,7 @@ function cioc_vol_search_feed_list($atts) {
 			'location' => NULL,
 			'num' => NULL,
 			'code' => NULL,
+			'debug' => NULL,
 			'key' => 'missing'
 	), $atts );
 	
@@ -69,10 +70,10 @@ function cioc_vol_search_feed_list($atts) {
  			$fetch_url .= '&loc=on';
  		}
  		if ($options['num']) {
- 			$fetch_url .= '&num=' . $options['num'];
+ 			$fetch_url .= '&num=' . urlencode($options['num']);
  		}
  		if ($options['code']) {
- 			$fetch_url .= '&code=' . $options['code'];
+ 			$fetch_url .= '&code=' . urlencode($options['code']);
  		}
  	}
      
@@ -93,6 +94,11 @@ function cioc_vol_search_feed_list($atts) {
 		} else {
 			$list_html = '';
 		}
+		
+		if ($options ['debug'] == 'on') {
+			$list_html .= '<a href="' . $fetch_url . '">' . $fetch_url . '</a>';
+		}
+		
  		$list_html .= '<dl'
  				. ($options['list_class'] ? ' class="' . esc_attr($options['list_class']) . '"' : '')
  				. ($options['list_id'] ? ' id="' . esc_attr($options['list_id']) . '"' : '')

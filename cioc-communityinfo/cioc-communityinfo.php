@@ -27,6 +27,9 @@ function cioc_cominfo_search_feed_list($atts) {
 			'officephone' => NULL,
 			'hours' => NULL,
 			'code' => NULL,
+			'location' => NULL,
+			'servicearea' => NULL,
+			'debug' => NULL,
 			'key' => 'missing' 
 	), $atts );
 	
@@ -91,7 +94,13 @@ function cioc_cominfo_search_feed_list($atts) {
 			'taxonomy'
 	) )) {
 		if ($options ['code']) {
-			$fetch_url .= '&code=' . $options ['code'];
+			$fetch_url .= '&code=' . urlencode($options ['code']);
+		}
+		if ($options ['location']) {
+			$fetch_url .= '&location=' . urlencode($options ['location']);
+		}
+		if ($options ['servicearea']) {
+			$fetch_url .= '&servicearea=' . urlencode($options ['servicearea']);
 		}
 	}
 	
@@ -107,10 +116,16 @@ function cioc_cominfo_search_feed_list($atts) {
 				. '.dt-cioc {margin-top:1.5em; margin-bottom:0.5em; font-size: 110%;}'
 				. '.dd-cioc {margin-left:1.5em; margin-bottom:0.5em;}'
 				. '.org-description {margin-bottom:0.75em;}'
+				. '.atgoeshere::before {content:\' [at] \';}'
 				. '</style>';
 		} else {
 			$list_html = '';
 		}
+		
+		if ($options ['debug'] == 'on') {
+			$list_html .= '<a href="' . $fetch_url . '">' . $fetch_url . '</a>';
+		}
+		
 		$list_html .= '<dl' . ($options ['list_class'] ? ' class="' . esc_attr ( $options ['list_class'] ) . '"' : '') . ($options ['list_id'] ? ' id="' . esc_attr ( $options ['list_id'] ) . '"' : '') . '>';
 		
 		foreach ( $json_data->{'recordset'} as $list_entry ) {
@@ -122,16 +137,21 @@ function cioc_cominfo_search_feed_list($atts) {
 					. htmlspecialchars ( $list_entry->{'description'} )
 					. '</dd>';
 			}
-			if ($options ['address'] == 'on' and $list_entry->{'address'}) {
+			if ($options ['address'] == 'on' and ($list_entry->{'address'} || $list_entry->{'location'})) {
 				$list_html .= '<dd class="org-address dd-cioc">' 
 					. ($options ['has_fa'] == 'on' ? '<i class="fa fa-map-marker fa-cioc" aria-hidden="true"></i> ' : '')
-					. htmlspecialchars ( $list_entry->{'address'} )
+					. htmlspecialchars ( $list_entry->{'address'} ? $list_entry->{'address'} : $list_entry->{'location'})
 					. '</dd>';
+			} elseif ($list_entry->{'location'}) {
+				$list_html .= '<dd class="org-address dd-cioc">'
+						. ($options ['has_fa'] == 'on' ? '<i class="fa fa-map-marker fa-cioc" aria-hidden="true"></i> ' : '')
+						. htmlspecialchars ( $list_entry->{'location'} )
+						. '</dd>';
 			}
 			if ($options ['email'] == 'on' and $list_entry->{'email'}) {
 				$list_html .= '<dd class="org-email dd-cioc">'
 					. ($options ['has_fa'] == 'on' ? '<i class="fa fa-envelope fa-cioc" aria-hidden="true"></i> ' : '')
-					. str_replace ( '@', ' [at] ', htmlspecialchars ( $list_entry->{'email'} ) )
+					. str_replace ( '@', '<span class="atgoeshere"></span>', htmlspecialchars ( $list_entry->{'email'} ) )
 					. '</dd>';
 			}
 			if ($options ['web'] == 'on' and $list_entry->{'web'}) {
