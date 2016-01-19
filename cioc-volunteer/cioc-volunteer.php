@@ -1,7 +1,7 @@
 <?php
 /*
-* Plugin Name: CIOC Volunteer Feeds
-* Description: This plugin provides integration shortcodes for feeds from the CIOC Software volunteer module
+* Plugin Name: CIOC Volunteer Opportunity Feeds
+* Description: This plugin provides integration shortcodes for feeds from the CIOC Software Volunteer Opportunities module
 * Version: 1.0.2
 * Author: Katherine Lambacher
 * Author URI: http://www.kclsoftware.com
