@@ -2,7 +2,7 @@
 /*
 * Plugin Name: CIOC Volunteer Feeds
 * Description: This plugin provides integration shortcodes for feeds from the CIOC Software volunteer module
-* Version: 1.0.1
+* Version: 1.0.2
 * Author: Katherine Lambacher
 * Author URI: http://www.kclsoftware.com
 * License: Apache 2.0

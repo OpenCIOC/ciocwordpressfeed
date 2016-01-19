@@ -2,7 +2,7 @@
 /*
  * Plugin Name: CIOC Community Information Feeds
  * Description: This plugin provides integration shortcodes for feeds from the CIOC Software Community Information module
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Katherine Lambacher
  * Author URI: http://www.kclsoftware.com
  * License: Apache 2.0
