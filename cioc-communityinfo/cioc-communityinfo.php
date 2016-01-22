@@ -142,11 +142,6 @@ function cioc_cominfo_search_feed_list($atts) {
 					. ($options ['has_fa'] == 'on' ? '<i class="fa fa-map-marker fa-cioc" aria-hidden="true"></i> ' : '')
 					. htmlspecialchars ( $list_entry->{'address'} ? $list_entry->{'address'} : $list_entry->{'location'})
 					. '</dd>';
-			} elseif ($list_entry->{'location'}) {
-				$list_html .= '<dd class="org-address dd-cioc">'
-						. ($options ['has_fa'] == 'on' ? '<i class="fa fa-map-marker fa-cioc" aria-hidden="true"></i> ' : '')
-						. htmlspecialchars ( $list_entry->{'location'} )
-						. '</dd>';
 			}
 			if ($options ['email'] == 'on' and $list_entry->{'email'}) {
 				$list_html .= '<dd class="org-email dd-cioc">'

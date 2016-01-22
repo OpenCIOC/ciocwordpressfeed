@@ -10,3 +10,11 @@ or
 https://github.com/OpenCIOC/ciocwordpressfeed/raw/master/cioc-communityinfo.zip
 
 and follow the instructions for manual installation at https://codex.wordpress.org/Managing_Plugins
+
+## User Manuals ##
+
+Community Information:
+http://www.opencioc.org/wordpress-ref-feed.php?type=volbasic
+
+Volunteer Opportunities:
+http://www.opencioc.org/wordpress-ref-feed.php?type=volbasic
