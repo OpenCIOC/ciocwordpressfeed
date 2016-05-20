@@ -1,0 +1,116 @@
+.ciocrsd-alert, .ciocrsd-success {
+	padding: 2px 5px;
+	border: 1px solid transparent;
+	border-radius: 4px;
+}
+
+.ciocrsd-alert {
+	background-color: #f2dede;
+	border-color: #ebccd1;
+	color: #a94442;
+}
+
+.ciocrsd-success {
+	background-color: #dff0d8;
+	border-color: #d6e9c6;
+	color: #3c763d;
+}
+
+div.ciocrsd-alert, div.ciocrsd-success {
+	padding: 5px 10px;
+	margin-top: .25em;
+	margin-bottom: 1em;;	
+}
+
+div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
+	margin-top: 1.5em;
+	margin-bottom: .75em;
+	padding-top: .25em;
+	border-top: thin solid #ccc;
+}
+
+.ciocrsd-field-group-row {
+	margin-bottom: .25em;
+}
+
+.ciocrsd-field-label {
+	font-weight: bold;
+}
+
+.ciocrsd-field-content {
+	padding-left: 1.5em;
+}
+
+.ciocrsd-field-content_full {
+
+}
+
+.atgoeshere::before {
+	content: "@";
+}
+
+.ciocrsd-record-detail {
+	padding-bottom: .75em;
+	margin-bottom: 2em;
+	border-bottom: thin solid #ccc;
+}
+
+.ciocrsd-record-detail > h2.ciocrsd-org-name {
+	margin-bottom: .75em;
+}
+
+.ciocrsd-record-detail > h3.ciocrsd-org-name {
+	margin-top: .75em;
+	margin-bottom: .75em;
+}
+
+.ciocrsd-record-detail .recordLogo, .ciocrsd-search-result .recordLogo {
+	max-height: 130px;
+}
+
+.ciocrsd-search-results > .ciocrsd-search-result > h2.ciocrsd-org-name {
+	margin-top: .5em;
+	margin-bottom: .75em;
+	font-size: large;
+}
+
+.ciocrsd-search-result {
+	margin-top: 1.5em;
+	border-top: thin solid #ccc;
+}
+
+.ciocrsd-search-buttons {
+	margin-top: .25em;
+	margin-bottom: .25em;
+}
+
+input.form-control, select.form-control {
+	width: 100%;
+	height: 2.5em;
+	line-height: 1.35;
+	padding: 6px 12px;
+	background-color: #fff;
+}
+
+.ciocrsd-form-input {
+	margin-bottom: .5em;	
+}
+
+.ciocrsd-logo-container {
+	display: block;
+	float: right;
+}
+
+.ciocrsd-search-result .ciocrsd-logo-container {
+	padding: .75em 0 .75em 1em;
+}
+
+.ciocrsd-record-detail .ciocrsd-logo-container {
+	padding: 0 0 .75em 1em;
+}
+
+@media (max-width: 767px) {
+	.ciocrsd-logo-container {
+		display: none;
+	}
+}
