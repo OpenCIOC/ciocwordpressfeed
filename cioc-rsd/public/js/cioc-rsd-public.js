@@ -28,5 +28,35 @@
 	 * Although scripts in the WordPress core, Plugins and Themes may be
 	 * practising this, we should strive to set a better example in our own work.
 	 */
+	$(function() {
+		var map_canvas = $('#map_canvas'), 
+			api_key = $('.ciocrsd-record-detail').data('mapsKey');
+		if (!map_canvas.length || !api_key) {
+			return
+		}
+
+		window['ciocrsd_start_map'] = function() {
+
+			var myLatlng = new google.maps.LatLng(parseFloat(map_canvas.attr('latitude')), parseFloat(map_canvas.attr('longitude'))),
+			mapOptions = {
+				center: myLatlng,
+				zoom: 13,
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			};
+			console.log(myLatlng, myLatlng.lat(), myLatlng.lng());
+
+			map_canvas.show();
+
+			var map = new google.maps.Map(map_canvas[0], mapOptions);
+			var marker = new google.maps.Marker({
+				position: myLatlng,
+				map: map
+			});
+
+			return;
+		};
+
+		$.getScript('//maps.googleapis.com/maps/api/js?v=3&key=' + api_key + '&sensor=false&callback=ciocrsd_start_map');
+	});
 
 })( jQuery );

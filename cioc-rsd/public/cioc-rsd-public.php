@@ -330,6 +330,11 @@ class CIOC_RSD_Public {
 	
 		if ($options) {
 			$show_field_groups = isset($options['ciocrsd_field_groups']) ? $options['ciocrsd_field_groups'] : 0;
+			if (isset($options['ciocrsd_google_maps_key'])) {
+				$google_maps_key = ' data-maps-key="' . $options['ciocrsd_google_maps_key'] . '"';
+			} else {
+				$google_maps_key = "";
+			}
 		}
 	
 		$fetch_url = $this->parent->full_fetch_url();
@@ -438,7 +443,7 @@ class CIOC_RSD_Public {
 							$return_html = $org_name_html . $return_html;
 						}
 						
-						$return_html = '<div class="ciocrsd-record-detail">' .  $return_html . '</div>';
+						$return_html = '<div class="ciocrsd-record-detail"' . $google_maps_key . '>' .  $return_html . '</div>';
 						
 					}
 				}
