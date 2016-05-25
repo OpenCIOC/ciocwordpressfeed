@@ -37,13 +37,12 @@
 
 		window['ciocrsd_start_map'] = function() {
 
-			var myLatlng = new google.maps.LatLng(parseFloat(map_canvas.attr('latitude')), parseFloat(map_canvas.attr('longitude'))),
+			var myLatlng = new google.maps.LatLng(map_canvas.attr('latitude'), map_canvas.attr('longitude')),
 			mapOptions = {
 				center: myLatlng,
 				zoom: 13,
 				mapTypeId: google.maps.MapTypeId.ROADMAP
 			};
-			console.log(myLatlng, myLatlng.lat(), myLatlng.lng());
 
 			map_canvas.show();
 
