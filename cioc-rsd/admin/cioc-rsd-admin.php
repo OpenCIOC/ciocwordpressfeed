@@ -39,6 +39,8 @@ class CIOC_RSD_Admin {
 		
 		add_settings_field ( 'ciocrsd_has_fa', __ ( 'Do not add FontAwesome library components' ), array( $this, 'has_fa_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
 		
+		add_settings_field ( 'ciocrsd_add_icons', __ ( 'Add icons automatically whenever possible' ), array( $this, 'add_icons_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
+		
 		add_settings_field ( 'ciocrsd_has_bootstrap', __ ( 'Do not add Bootstrap library components' ), array( $this, 'has_bootstrap_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
 		
 		add_settings_field ( 'ciocrsd_browse_count', __ ( 'Include Record Count on Browse Page(s)' ), array( $this, 'browse_count_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
@@ -83,6 +85,16 @@ class CIOC_RSD_Admin {
 		<input type='checkbox' name='ciocrsd_settings[ciocrsd_has_fa]' <?php checked( $options['ciocrsd_has_fa'], 1 ); ?> value='1'>
 		<?php
 	}
+	
+	public function add_icons_render() {
+		$options = get_option ( 'ciocrsd_settings' );
+		if (!isset($options['ciocrsd_add_icons'])) {
+			$options['ciocrsd_add_icons'] = 0;
+		}
+		?>
+			<input type='checkbox' name='ciocrsd_settings[ciocrsd_add_icons]' <?php checked( $options['ciocrsd_add_icons'], 1 ); ?> value='1'>
+			<?php
+		}
 	
 	public function has_bootstrap_render() {
 		$options = get_option ( 'ciocrsd_settings' );
@@ -172,8 +184,8 @@ class CIOC_RSD_Admin {
 				$content = wp_remote_retrieve_body($response);
 				$json_data = json_decode ( $content );
 				$cioc_user = $json_data->{'UserName'} ? $json_data->{'UserName'} : 'credentials rejected';
-				$cioc_user_cic = $json_data->{'CIC'} ? 'yes' : 'no';
-				$cioc_user_vol = $json_data->{'VOL'} ? 'yes' : 'no';
+				$cioc_user_cic = (isset($json_data->{'CIC'}) && $json_data->{'CIC'}) ? 'yes' : 'no';
+				$cioc_user_vol = (isset($json_data->{'VOL'}) && $json_data->{'VOL'}) ? 'yes' : 'no';
 				?>
 				<p>URL: <strong><?=$fetch_url?></strong>
 				<br>CIOC User: <strong><?=$cioc_user?></strong>

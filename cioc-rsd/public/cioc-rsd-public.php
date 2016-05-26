@@ -16,6 +16,8 @@ class CIOC_RSD_Public {
 	
 	protected $cmtype_values;
 	
+	protected $icon_mapping;
+	
 	public function __construct( CIOC_RSD $parent ) {
 		if ($parent) {
 			$this->parent = $parent;
@@ -43,6 +45,57 @@ class CIOC_RSD_Public {
 		$this->stype_values = array ( 'A', 'O', 'T', 'S' );
 		
 		$this->cmtype_values = array ( 'L', 'S' );
+		
+		$this->icon_mapping = array (
+				'ACCESSIBILITY' => 'fa fa-wheelchair',
+				'APPLICATION' => 'fa fa-pencil-square-o',
+				'AREAS_SERVED' => 'fa fa-globe',
+				'BOUNDARIES' => 'fa fa-square-o',
+				'BUS_ROUTES' => 'fa fa-bus',
+				'ORG_LOCATION_SERVICE' => 'fa fa-sitemap',
+				'AFTER_HOURS_PHONE' => 'fa fa-phone-square',
+				'COMMENTS' => 'fa fa-comment',
+				'CONTACT_1' => 'fa fa-user',
+				'CRISIS_PHONE' => 'fa fa-phone-square',
+				'DATES' => 'fa fa-calendar',
+				'DESCRIPTION' => 'fa fa-info-circle',
+				'DISTRIBUTION' => 'fa fa-share-alt',
+				'E_MAIL' => 'fa fa-envelope-o',
+				'ELECTIONS' => 'fa fa-calendar-check-o',
+				'ELIGIBILITY' => 'fa fa-street-view',
+				'ESTABLISHED' => 'fa fa-institution',
+				'EXEC_1' => 'fa fa-user',
+				'FAX' => 'fa fa-fax',
+				'FEES' => 'fa fa-money',
+				'HOURS' => 'fa fa-calendar-o',
+				'INTERNAL_MEMO' => 'fa fa-comment-o',
+				'INTERSECTION' => 'fa fa-map-signs',
+				'LANGUAGES' => 'fa fa-language',
+				'LOCATED_IN_CM' => 'fa fa-map-marker',
+				'MAIL_ADDRESS' => 'fa fa-envelope',
+				'MEETINGS' => 'fa fa-calendar-plus-o',
+				'OFFICE_PHONE' => 'fa fa-phone',
+				'PRINT_MATERIAL' => 'fa fa-file-o',
+				'PUBLIC_COMMENTS' => 'fa fa-warning',
+				'PUBLICATION' => 'fa fa-list-alt',
+				'PUBLICATION_FRIENDLY' => 'fa fa-list-alt',
+				'RESOURCES' => 'fa fa-folder-open-o',
+				'SITE_ADDRESS' => 'fa fa-map',
+				'SITE_ADDRESS_MAPPED' => 'fa fa-map-o',
+				'SITE_LOCATION' => 'fa fa-building-o',
+				'SORT_AS' => 'fa fa-sort-alpha-asc',
+				'SOURCE' => 'fa fa-user-plus',
+				'SOURCE_DB' => 'fa fa-copyright',
+				'TAXONOMY' => 'fa fa-tags',
+				'TAXONOMY_STAFF' => 'fa fa-tags',
+				'TDD_PHONE' => 'fa fa-tty',
+				'TOLL_FREE_PHONE' => 'fa fa-phone-square',
+				'USAGE_COUNT' => 'fa fa-bar-chart',
+				'USAGE_COUNT_P' => 'fa fa-line-chart',
+				'USAGE_COUNT_S' => 'fa fa-line-chart',
+				'VOLCONTACT' => 'fa fa-users',
+				'WWW_ADDRESS' => 'fa fa-link'
+		);
 	}
 
 	public function enqueue_styles() {
@@ -139,7 +192,9 @@ class CIOC_RSD_Public {
 
 	private function encode_field($field_name, $field_value, $allow_html) {
 		if ($this->is_field_with_email($field_name)) {
-			$field_value =  htmlspecialchars ( $field_value );
+			if (!$allow_html) {
+				$field_value =  htmlspecialchars ( $field_value );
+			}
 			$field_value = str_replace ( '@', '<span class="atgoeshere"></span>', $field_value );
 		} elseif ($this->is_field_with_web($field_name)) {
 			if ($field_value) {
@@ -158,6 +213,27 @@ class CIOC_RSD_Public {
 			$field_value =  htmlspecialchars ( $field_value );
 		}
 		return $field_value;
+	}
+	
+	private function render_field($field_name, $field_label, $field_value, $allow_html, $add_icons) {
+		/* All inputs to this function should be set */
+		$field_value = $this->encode_field($field_name, $field_value, $allow_html);
+		$return_html = '<div class="ciocrsd-field-group-row">'
+				. '<div class="ciocrsd-field-label ciocrsd-label-' . $field_name . '">';
+		if ($add_icons) {
+			if (strpos($field_name,'HEADINGS') !== FALSE) {
+				$return_html .= '<i class="fa fa-tag" aria-hidden="true"></i> ';
+			} else {
+				$return_html .= (isset($this->icon_mapping[$field_name]) ?
+						'<i class="' . $this->icon_mapping[$field_name] . '" aria-hidden="true"></i> '
+						: '<i class="add-icon-' . $field_name . '" aria-hidden="true"></i>');
+			}
+		}
+		$return_html .= $field_label
+				. '</div>'
+				. '<div class="ciocrsd-field-content ciocrsd-' . $field_name . '">' . $field_value . '</div>'
+				. '</div>';
+		return $return_html;
 	}
 	
 	private function process_fetch_url_params($options, $add_params = []) {
@@ -335,6 +411,7 @@ class CIOC_RSD_Public {
 			} else {
 				$google_maps_key = "";
 			}
+			$add_icons = isset($options['ciocrsd_add_icons']) ? $options['ciocrsd_add_icons'] : 0;
 		}
 	
 		$fetch_url = $this->parent->full_fetch_url();
@@ -388,17 +465,14 @@ class CIOC_RSD_Public {
 							foreach ( $field_group->{'fields'} as $field ) {
 								$field_value = $field->{'value'};
 								$field_name = $field->{'name'};
-								
+								$field_label = $field->{'display_name'};
+															
 								if ($field_name == 'LOGO_ADDRESS' && $field_value) {
 									$logo = '<div class="ciocrsd-logo-container">' . $field_value . '</div>';
 								} else {
 									$allow_html =  isset($field->{'allow_html'}) ? $field->{'allow_html'} : FALSE;
-									$field_value = $this->encode_field($field_name, $field_value, $allow_html);
 									if ($field_value) {
-										$field_group_section_data .= '<div class="ciocrsd-field-group-row">'
-												. '<div class="ciocrsd-field-label ciocrsd-label-' . $field_name . '">' . $field->{'display_name'} . '</div>'
-												. '<div class="ciocrsd-field-content">' . $field_value . '</div>'
-												. '</div>';
+										$field_group_section_data .= $this->render_field($field_name, $field_label, $field_value, $allow_html, $add_icons);
 									}	
 								}
 							}
@@ -457,6 +531,11 @@ class CIOC_RSD_Public {
 	
 	public function display_results($atts) {
 		$options = get_option ( 'ciocrsd_settings' );
+		
+		$add_icons = 0;
+		if ($options && $options['ciocrsd_add_icons']) {
+			$add_icons = $options['ciocrsd_add_icons'];
+		}
 	
 		$fetch_url = $this->parent->full_fetch_url();
 		$search_params = [];
@@ -571,17 +650,9 @@ class CIOC_RSD_Public {
 								}
 								if ($org_location) {
 									$return_html .= '<div class="ciocrsd-field-group-row">'
-											. '<div class="ciocrsd-field-content-full ciocrsd-LOCATED_IN_CM">'
+											. '<div class="ciocrsd-field-label ciocrsd-LOCATED_IN_CM">'
 											. '<i class="fa fa-map-marker" aria-hidden="true"></i> '
 											. htmlspecialchars_decode($org_location)
-											. '</div>'
-											. '</div>';
-								}
-								
-								if ($org_desc) {
-									$return_html .= '<div class="ciocrsd-field-group-row">'
-											. '<div class="ciocrsd-field-content-full ciocrsd-DESCRIPTION">'
-											. (((substr($org_desc,-3) == '...') && $record_link) ? ($org_desc . ' <a href="' . $record_link . '">[ More Info ]</a>') : $org_desc) 
 											. '</div>'
 											. '</div>';
 								}
@@ -590,13 +661,26 @@ class CIOC_RSD_Public {
 									if (!in_array ($field_name, $ignore_fields)) {
 										if ($field_value) {
 											$return_html .= '<div class="ciocrsd-field-group-row">'
-													. '<div class="ciocrsd-field-label ciocrsd-label-' . $field_name . '">' 
-													. (isset($json_data->fields->{$field_name}) ? $json_data->fields->{$field_name} : $field_name) 
+													. '<div class="ciocrsd-field-label ciocrsd-label-' . $field_name . '">';
+											if ($add_icons) {
+												$return_html .= (isset($this->icon_mapping[$field_name]) ?
+														'<i class="' . $this->icon_mapping[$field_name] . '" aria-hidden="true"></i> '
+														: '<i class="fa add-icon-' . $field_name . '" aria-hidden="true"></i>');
+											}
+											$return_html .= (isset($json_data->fields->{$field_name}) ? $json_data->fields->{$field_name} : $field_name) 
 													. '</div>'
 													. '<div class="ciocrsd-field-content ciocrsd-' . $field_name . '">' . $field_value . '</div>'
-												. '</div>';
+													. '</div>';
 										}
 									}
+								}
+								
+								if ($org_desc) {
+									$return_html .= '<div class="ciocrsd-field-group-row">'
+											. '<div class="ciocrsd-field-content-full ciocrsd-DESCRIPTION">'
+													. (((substr($org_desc,-3) == '...') && $record_link) ? ($org_desc . ' <a href="' . $record_link . '">[ More Info ]</a>') : $org_desc)
+													. '</div>'
+															. '</div>';
 								}
 								
 								$return_html .= '</div>';

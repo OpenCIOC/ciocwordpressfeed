@@ -30,15 +30,19 @@ div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
 }
 
 .ciocrsd-field-group-row {
-	margin-bottom: .25em;
+	margin-bottom: .5em;
 }
 
 .ciocrsd-field-label {
 	font-weight: bold;
 }
 
+.ciocrsd-record-detail .ciocrsd-field-label {
+	font-size: larger;	
+}
+
 .ciocrsd-field-content {
-	padding-left: 1.5em;
+	padding-left: 2.5em;
 }
 
 .ciocrsd-field-content_full {
@@ -113,6 +117,11 @@ div.DetailsMapCanvas {
 	width: 330px;
 	height: 175px;
 	float: right;
+}
+
+.ciocrsd-field-label .fa {
+	min-width: 1.5em;
+	text-align: center;
 }
 
 
