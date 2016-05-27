@@ -46,9 +46,10 @@ div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
 	font-size: 115%;	
 }
 
-.ciocrsd-field-label .fa, .ciocrsd-field-label .glyphicon {
+.ciocrsd-field-label .fa, .ciocrsd-field-label .glyphicon, .ciocrsd-quicklist-browse .fa, .ciocrsd-quicklist-browse .glyphicon {
 	min-width: 1.5em;
 	text-align: center;
+	padding-right: .25em;
 }
 
 .ciocrsd-record-detail .ciocrsd-field-label .fa, .ciocrsd-record-detail .ciocrsd-field-label .glyphicon {

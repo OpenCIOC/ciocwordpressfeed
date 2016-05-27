@@ -18,6 +18,8 @@ class CIOC_RSD_Public {
 	
 	protected $icon_mapping;
 	
+	const NO_GROUP = 'NO-GROUP';
+	
 	public function __construct( CIOC_RSD $parent ) {
 		if ($parent) {
 			$this->parent = $parent;
@@ -564,7 +566,7 @@ class CIOC_RSD_Public {
 				'count' => TRUE
 		), $atts );
 	
-		$fetch_url = $options['ciocrsd_cioc_url'];
+		$fetch_url = $fetch_url = $this->parent->full_fetch_url();
 		$return_html = '';
 
 		$target_results = $sc_options ['targetresults'];
@@ -604,10 +606,11 @@ class CIOC_RSD_Public {
 	
 			$fetch_url_params = $this->process_fetch_url_params($sc_options, $add_params);
 	
-			$response = wp_remote_get( $fetch_url . '/jsonfeeds/quicklist' . $pubcode_path . '?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 						<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+						<?=$fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params ?>
 					<?php
 				} else {
 					$content = wp_remote_retrieve_body($response);		
@@ -631,8 +634,10 @@ class CIOC_RSD_Public {
 							$quicklist_name = 'PubName';
 						}
 						$type = $select_name;
-						if (isset($json_data->{'quicklist'}) && count($json_data->{'quicklist'}) > 0) {
-							$return_html .= '<ul class="ciocrsd-quicklist-browse">';
+
+						$last_group = '';
+						if (isset($json_data->{'quicklist'}) && !empty($json_data->{'quicklist'})) {
+							$return_html = '<div class="ciocrsd-quicklist-browse">';
 							foreach ( $json_data->{'quicklist'} as $record_row ) {
 								$record_id = (isset($record_row->{$id_type}) ? $record_row->{$id_type} : NULL);
 								$record_id = $this->clean_id($record_id);
@@ -643,11 +648,46 @@ class CIOC_RSD_Public {
 									$record_count_display = ' <div class="ciocrsd-count-bubble">' . $record_count . '</div>';
 								}
 								if ($record_id && $record_count) {
-									$return_html .= '<li><a href="' . $form_action . '?dosearch=on&' . $select_name . '=' . $record_id . '">' 
+									$this_group = (isset($record_row->{'Group'}) && $record_row->{'Group'}) ? $record_row->{'Group'} : $this::NO_GROUP;
+									
+									if ($last_group != $this_group) { 
+										if ($last_group != '') {
+											$return_html .= '</ul>';
+										}
+										if ($this_group != $this::NO_GROUP) {
+											$cat_icon = NULL;
+											if (isset($record_row->{'IconNameFullGroup'}) && $record_row->{'IconNameFullGroup'}) {
+												$cat_icon = $record_row->{'IconNameFullGroup'};
+												if (substr($cat_icon, 0, 3) === 'fa-' || substr($cat_icon, 0, 5) === 'icon-') {
+													$cat_icon = 'fa ' . $cat_icon;
+												} elseif (substr($cat_icon, 0, 10) === 'glyphicon-') {
+													$cat_icon = 'glyphicon ' . $cat_icon;
+												}
+												$cat_icon = '<i class="' . $cat_icon . '" aria-hidden="true"></i>';
+											}
+											$return_html .= '<h4>' . $cat_icon . ' ' . $this_group . '</h4>';	
+										}
+										$return_html .= '<ul>';
+									}
+									$last_group = $this_group;
+	
+									$cat_icon = NULL;
+									if (isset($record_row->{'IconNameFull'}) && $record_row->{'IconNameFull'}) {
+										$cat_icon = $record_row->{'IconNameFull'};
+										if (substr($cat_icon, 0, 3) === 'fa-' || substr($cat_icon, 0, 5) === 'icon-') {
+											$cat_icon = 'fa ' . $cat_icon;
+										} elseif (substr($cat_icon, 0, 10) === 'glyphicon-') {
+											$cat_icon = 'glyphicon ' . $cat_icon;
+										}
+										$cat_icon = '<i class="' . $cat_icon . '" aria-hidden="true"></i>';
+									}
+									$return_html .= '<li>'
+										. $cat_icon
+										. ' <a href="' . $form_action . '?dosearch=on&' . $select_name . '=' . $record_id . '">' 
 										. $record_row->{$quicklist_name} . '</a>' . $record_count_display . '</li>';
 								}
 							}
-							$return_html .= '</ul>';
+							$return_html .= '</ul></div>';
 						}
 					}
 				}
@@ -789,7 +829,7 @@ class CIOC_RSD_Public {
 								foreach ($record_row as $field_name => $field_value) {
 									if (!in_array ($field_name, $ignore_fields)) {
 										if ($field_value) {
-											$allow_html =  isset($field->{'allow_html'}) ? $field->{'allow_html'} : FALSE;
+											$allow_html =  TRUE;
 											$field_label = (isset($json_data->fields->{$field_name}) ? $json_data->fields->{$field_name} : $field_name);
 											$return_html .= $this->render_field($field_name, $field_label, $field_value, $allow_html, $add_icons);
 										}
@@ -821,7 +861,7 @@ class CIOC_RSD_Public {
 	public function agegroup_dropdown($atts, &$type = NULL) {
 		$options = get_option ( 'ciocrsd_settings' );
 		
-		$fetch_url = $options['ciocrsd_cioc_url'];
+		$fetch_url = $this->parent->full_fetch_url();
 		$return_html = '';
 		
 		$sc_options = shortcode_atts ( array (
@@ -841,7 +881,7 @@ class CIOC_RSD_Public {
 						
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 			
-			$response = wp_remote_get( $fetch_url . '/jsonfeeds/agegrouplist?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/rpc/agegrouplist?' . $fetch_url_params );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
@@ -917,7 +957,7 @@ class CIOC_RSD_Public {
 	protected function quicklist_dropdown($sc_options, &$type = NULL) {
 		$options = get_option ( 'ciocrsd_settings' );
 	
-		$fetch_url = $options['ciocrsd_cioc_url'];
+		$fetch_url = $this->parent->full_fetch_url();
 		$return_html = '';
 		
 		if ($sc_options['shortplaceholder']) {
@@ -939,7 +979,7 @@ class CIOC_RSD_Public {
 				
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 				
-			$response = wp_remote_get( $fetch_url . '/jsonfeeds/quicklist' . $pubcode_path . '?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
