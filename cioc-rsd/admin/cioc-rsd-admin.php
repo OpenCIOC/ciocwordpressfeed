@@ -42,9 +42,7 @@ class CIOC_RSD_Admin {
 		add_settings_field ( 'ciocrsd_add_icons', __ ( 'Add icons automatically whenever possible' ), array( $this, 'add_icons_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
 		
 		add_settings_field ( 'ciocrsd_has_bootstrap', __ ( 'Do not add Bootstrap library components' ), array( $this, 'has_bootstrap_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
-		
-		add_settings_field ( 'ciocrsd_browse_count', __ ( 'Include Record Count on Browse Page(s)' ), array( $this, 'browse_count_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
-		
+			
 		add_settings_field ( 'ciocrsd_field_groups', __ ( 'Use Field Groups for Record Details Display' ), array( $this, 'field_groups_render' ), 'cioc_rsd_plugin', 'ciocrsd_config_section' );
 		
 		add_settings_field ( 'ciocrsd_google_maps_key', __ ( 'Google Maps API Key' ), array( $this, 'google_maps_key_render' ), 'cioc_rsd_plugin', 'ciocrsd_mapping_section' );
@@ -103,16 +101,6 @@ class CIOC_RSD_Admin {
 		}
 		?>
 		<input type='checkbox' name='ciocrsd_settings[ciocrsd_has_bootstrap]' <?php checked( $options['ciocrsd_has_bootstrap'], 1 ); ?> value='1'>
-		<?php
-	}
-
-	public function browse_count_render() {
-		$options = get_option ( 'ciocrsd_settings' );
-		if (!isset($options['ciocrsd_browse_count'])) {
-			$options['ciocrsd_browse_count'] = 0;
-		}
-		?>
-		<input type='checkbox' name='ciocrsd_settings[ciocrsd_browse_count]' <?php checked( $options['ciocrsd_browse_count'], 1 ); ?> value='1'>
 		<?php
 	}
 	

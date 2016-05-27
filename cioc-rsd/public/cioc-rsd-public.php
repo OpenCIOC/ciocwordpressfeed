@@ -49,31 +49,36 @@ class CIOC_RSD_Public {
 		$this->icon_mapping = array (
 				'ACCESSIBILITY' => 'fa fa-wheelchair',
 				'APPLICATION' => 'fa fa-pencil-square-o',
-				'AREAS_SERVED' => 'fa fa-globe',
-				'BOUNDARIES' => 'fa fa-square-o',
+				'AREAS_SERVED' => 'fa icon-globe-lines',
+				'NO_UPDATE_EMAIL' => 'fa icon-no-email',
+				'BOUNDARIES' => 'fa icon-border',
 				'BUS_ROUTES' => 'fa fa-bus',
 				'ORG_LOCATION_SERVICE' => 'fa fa-sitemap',
-				'AFTER_HOURS_PHONE' => 'fa fa-phone-square',
+				'AFTER_HRS_PHONE' => 'fa icon-phone-time',
 				'COMMENTS' => 'fa fa-comment',
 				'CONTACT_1' => 'fa fa-user',
-				'CRISIS_PHONE' => 'fa fa-phone-square',
+				'CONTACT_2' => 'fa icon-user-alt',
+				'CRISIS_PHONE' => 'fa icon-phone-crisis',
 				'DATES' => 'fa fa-calendar',
 				'DESCRIPTION' => 'fa fa-info-circle',
 				'DISTRIBUTION' => 'fa fa-share-alt',
 				'E_MAIL' => 'fa fa-envelope-o',
 				'ELECTIONS' => 'fa fa-calendar-check-o',
-				'ELIGIBILITY' => 'fa fa-street-view',
+				'ELIGIBILITY' => 'fa fa-check-square-o',
 				'ESTABLISHED' => 'fa fa-institution',
-				'EXEC_1' => 'fa fa-user',
+				'EXEC_1' => 'fa icon-user-exec',
+				'EXEC_2' => 'fa icon-user-exec-alt',
 				'FAX' => 'fa fa-fax',
 				'FEES' => 'fa fa-money',
+				'FUNDING' => 'fa icon-funding-alt',
 				'HOURS' => 'fa fa-calendar-o',
 				'INTERNAL_MEMO' => 'fa fa-comment-o',
 				'INTERSECTION' => 'fa fa-map-signs',
-				'LANGUAGES' => 'fa fa-language',
+				'LANGUAGES' => 'fa icon-language',
 				'LOCATED_IN_CM' => 'fa fa-map-marker',
 				'MAIL_ADDRESS' => 'fa fa-envelope',
 				'MEETINGS' => 'fa fa-calendar-plus-o',
+				'NAICS' => 'fa fa-industry',
 				'OFFICE_PHONE' => 'fa fa-phone',
 				'PRINT_MATERIAL' => 'fa fa-file-o',
 				'PUBLIC_COMMENTS' => 'fa fa-warning',
@@ -102,12 +107,17 @@ class CIOC_RSD_Public {
 		$options = get_option ( 'ciocrsd_settings' );
 		
 		if ($options) {
-			$add_fa = isset($options['ciocrsd_has_fa']) ? $options['ciocrsd_ha_fa'] : 0;
+			$no_fa = isset($options['ciocrsd_has_fa']) ? $options['ciocrsd_has_fa'] : 0;
+			$no_bs = isset($options['ciocrsd_has_bootstrap']) ? $options['ciocrsd_has_bootstrap'] : 0;
 		}
 		
 		wp_enqueue_style( $this->plugin_name, $this->parent->plugin_main_dir . 'css/cioc-rsd.css', array(), $this->version);
-		if (!$add_fa) {
+		wp_enqueue_style( 'cioc-icon-font', 'https://d3byedob0d0n2o.cloudfront.net/fontello/c39f5861b48496b/fontello.css');
+		if (!$no_fa) {
 			wp_enqueue_style( 'font-awesome', '//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css');
+		}
+		if (!$no_bs) {
+			wp_enqueue_style( 'bs-glyphicons', 'https://d3byedob0d0n2o.cloudfront.net/bootstrap-3.3.5/glyphicons.css');
 		}
 	}
 
@@ -117,6 +127,7 @@ class CIOC_RSD_Public {
 	
 	public function register_shortcodes() {
 		add_shortcode ( 'ciocrsd-countall', array( $this, 'count_all_in_view' ) );
+		add_shortcode ( 'ciocrsd-quicklist-browse', array ( $this, 'quicklist_browse' ) );
 		add_shortcode ( 'ciocrsd-displayrecord', array ( $this, 'display_record' ) );
 		add_shortcode ( 'ciocrsd-displayresults', array ( $this, 'display_results' ) );
 		add_shortcode ( 'ciocrsd-searchform', array ( $this, 'search_form' ) );
@@ -136,6 +147,16 @@ class CIOC_RSD_Public {
 		$vars[] .= 'PBCode';
 		$vars[] .= 'GHID';
 		$vars[] .= 'AgeGroup';
+		
+		/* not responding to these yet
+		$vars[] .= 'OL1';
+		$vars[] .= 'OL2';
+		$vars[] .= 'OL3';
+		$vars[] .= 'OL4';
+		$vars[] .= 'LL1';
+		$vars[] .= 'SL1';
+		*/
+		
 		$vars[] .= 'dosearch';
 		return $vars;
 	}
@@ -512,9 +533,11 @@ class CIOC_RSD_Public {
 						}
 
 						if ($logo) {
-							$return_html = $logo . '<div class="ciocrsd-org-name-container">' . $org_name_html . '</div>' . $return_html;
+							$return_html = '<div class="ciocrsd-record-header">'
+								. $logo . '<div class="ciocrsd-org-name-container">' . $org_name_html . '</div>'
+								. '</div>' . $return_html;
 						} else {
-							$return_html = $org_name_html . $return_html;
+							$return_html = '<div class="ciocrsd-record-header">' . $org_name_html . '</div>' . $return_html;
 						}
 						
 						$return_html = '<div class="ciocrsd-record-detail"' . $google_maps_key . '>' .  $return_html . '</div>';
@@ -528,6 +551,109 @@ class CIOC_RSD_Public {
 	
 		return $return_html;
 	}
+	
+	public function quicklist_browse($atts) {
+		$options = get_option ( 'ciocrsd_settings' );
+		
+		$sc_options = shortcode_atts ( array (
+				'viewtype' => NULL,
+				'ln' => NULL,
+				'quicklist' => NULL,
+				'ciocresults' => FALSE,
+				'targetresults' => NULL,
+				'count' => TRUE
+		), $atts );
+	
+		$fetch_url = $options['ciocrsd_cioc_url'];
+		$return_html = '';
+
+		$target_results = $sc_options ['targetresults'];
+		if (filter_var ( $target_results, FILTER_VALIDATE_URL ) === FALSE) {
+			$target_results = NULL;
+		}
+		
+		$form_action = '';
+		if ($sc_options['ciocresults']) {
+			$form_action = $options['ciocrsd_cioc_url'] . '/results.asp';
+		} elseif ($target_results) {
+			$form_action = $target_results;
+		}
+		
+		$show_count = TRUE;
+		if ($sc_options['count'] === 'off') {
+			$show_count = FALSE;
+		}
+		
+		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {
+			$quicklist_type = $sc_options['quicklist'];
+			$pubcode = NULL;
+			if ($quicklist_type && $quicklist_type != 'DEFAULT') {
+				$pubcode = $this->clean_pubcode($quicklist_type);
+			}
+			$pubcode_path = '';
+			if ($pubcode) {
+				$pubcode_path = '/' . $pubcode;
+			}
+			
+			$add_params = [];
+			if ($show_count) {
+				$add_params = array (
+					'count' => 'on'
+				);
+			}
+	
+			$fetch_url_params = $this->process_fetch_url_params($sc_options, $add_params);
+	
+			$response = wp_remote_get( $fetch_url . '/jsonfeeds/quicklist' . $pubcode_path . '?' . $fetch_url_params );
+			if (wp_remote_retrieve_response_code($response) != 200) {
+				?>
+						<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<?php
+				} else {
+					$content = wp_remote_retrieve_body($response);		
+					$json_data = json_decode ( $content );
+				
+					if (! json_last_error() == JSON_ERROR_NONE ) {
+						$return_html = '<span class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</span>';
+					} elseif ($content === FALSE) {
+						$return_html = '<span class="ciocrsd-alert">Error: Content not available</span>';
+					} else {
+						$search_params = $this->set_search_terms($sc_options);
+						
+						$is_heading = $json_data->{'type'} == 'Headings';
+						if ($is_heading) {
+							$select_name = 'GHID';
+							$id_type = 'GH_ID';
+							$quicklist_name = 'GeneralHeading';
+						} else {
+							$select_name = 'PBID';
+							$id_type = 'PB_ID';
+							$quicklist_name = 'PubName';
+						}
+						$type = $select_name;
+						if (isset($json_data->{'quicklist'}) && count($json_data->{'quicklist'}) > 0) {
+							$return_html .= '<ul class="ciocrsd-quicklist-browse">';
+							foreach ( $json_data->{'quicklist'} as $record_row ) {
+								$record_id = (isset($record_row->{$id_type}) ? $record_row->{$id_type} : NULL);
+								$record_id = $this->clean_id($record_id);
+								$record_count = TRUE;
+								$record_count_display = '';
+								if ($show_count && isset($record_row->{'RecordsInView'})) {
+									$record_count =  $record_row->{'RecordsInView'} === '0' ? FALSE : $record_row->{'RecordsInView'};
+									$record_count_display = ' <div class="ciocrsd-count-bubble">' . $record_count . '</div>';
+								}
+								if ($record_id && $record_count) {
+									$return_html .= '<li><a href="' . $form_action . '?dosearch=on&' . $select_name . '=' . $record_id . '">' 
+										. $record_row->{$quicklist_name} . '</a>' . $record_count_display . '</li>';
+								}
+							}
+							$return_html .= '</ul>';
+						}
+					}
+				}
+			}
+			return $return_html;
+		}
 	
 	public function display_results($atts) {
 		$options = get_option ( 'ciocrsd_settings' );
@@ -552,13 +678,16 @@ class CIOC_RSD_Public {
 					'nolink' => FALSE,
 					'nocount' => FALSE,
 					'sterms' => NULL,
-					'stype' => NULL,
+					'stype' => NULL,				
 					'pubcode' => NULL,
+					
+					/* not responding to these yet
 					'heading' => NULL,
 					'location' => NULL,
 					'servicearea' => NULL,
 					'minage' => NULL,
 					'maxage' => NULL
+					*/
 			), $atts );
 			
 			$this->check_domain($sc_options, 'cic');
@@ -660,17 +789,9 @@ class CIOC_RSD_Public {
 								foreach ($record_row as $field_name => $field_value) {
 									if (!in_array ($field_name, $ignore_fields)) {
 										if ($field_value) {
-											$return_html .= '<div class="ciocrsd-field-group-row">'
-													. '<div class="ciocrsd-field-label ciocrsd-label-' . $field_name . '">';
-											if ($add_icons) {
-												$return_html .= (isset($this->icon_mapping[$field_name]) ?
-														'<i class="' . $this->icon_mapping[$field_name] . '" aria-hidden="true"></i> '
-														: '<i class="fa add-icon-' . $field_name . '" aria-hidden="true"></i>');
-											}
-											$return_html .= (isset($json_data->fields->{$field_name}) ? $json_data->fields->{$field_name} : $field_name) 
-													. '</div>'
-													. '<div class="ciocrsd-field-content ciocrsd-' . $field_name . '">' . $field_value . '</div>'
-													. '</div>';
+											$allow_html =  isset($field->{'allow_html'}) ? $field->{'allow_html'} : FALSE;
+											$field_label = (isset($json_data->fields->{$field_name}) ? $json_data->fields->{$field_name} : $field_name);
+											$return_html .= $this->render_field($field_name, $field_label, $field_value, $allow_html, $add_icons);
 										}
 									}
 								}
@@ -678,9 +799,9 @@ class CIOC_RSD_Public {
 								if ($org_desc) {
 									$return_html .= '<div class="ciocrsd-field-group-row">'
 											. '<div class="ciocrsd-field-content-full ciocrsd-DESCRIPTION">'
-													. (((substr($org_desc,-3) == '...') && $record_link) ? ($org_desc . ' <a href="' . $record_link . '">[ More Info ]</a>') : $org_desc)
-													. '</div>'
-															. '</div>';
+											. (((substr($org_desc,-3) == '...') && $record_link) ? ($org_desc . ' <a href="' . $record_link . '">[ More Info ]</a>') : $org_desc)
+											. '</div>'
+											. '</div>';
 								}
 								
 								$return_html .= '</div>';
@@ -703,12 +824,21 @@ class CIOC_RSD_Public {
 		$fetch_url = $options['ciocrsd_cioc_url'];
 		$return_html = '';
 		
+		$sc_options = shortcode_atts ( array (
+				'viewtype' => NULL,
+				'ln' => NULL,
+				'shortplaceholder' => FALSE
+		), $atts );
+
+		if ($sc_options['shortplaceholder']) {
+			$placeholder_text = 'Age Group';
+		} else {
+			$placeholder_text = 'Select an Age Group';
+		}
+		
+		
 		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {
-			$sc_options = shortcode_atts ( array (
-					'viewtype' => NULL,
-					'ln' => NULL
-			), $atts );
-							
+						
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 			
 			$response = wp_remote_get( $fetch_url . '/jsonfeeds/agegrouplist?' . $fetch_url_params );
@@ -729,7 +859,7 @@ class CIOC_RSD_Public {
 
 					if (isset($json_data->{'agegroups'}) && count($json_data->{'agegroups'}) > 0) {
 						$return_html .= '<select name="AgeGroup" class="form-control">'
-							. '<option value=""> -- Select an Age Group -- </option>'; 
+							. '<option value=""> -- ' . $placeholder_text . ' -- </option>'; 
 						foreach ( $json_data->{'agegroups'} as $record_row ) {
 							$record_id = (isset($record_row->{'AgeGroup_ID'}) ? $record_row->{'AgeGroup_ID'} : NULL);
 							$record_id = $this->clean_id($record_id);
@@ -750,18 +880,25 @@ class CIOC_RSD_Public {
 	public function keyword_textbox_wrapper($atts) {
 		$sc_options = shortcode_atts ( array (
 				'viewtype' => NULL,
-				'ln' => NULL
+				'ln' => NULL,
+				'shortplaceholder' => FALSE
 		), $atts );
 		
 		return $this->keyword_textbox($sc_options);
 	}
 	
-	public function keyword_textbox($sc_options) {	
+	protected function keyword_textbox($sc_options) {
 		$search_params = $this->set_search_terms($sc_options);
+		
+		if ($sc_options['shortplaceholder']) {
+			$placeholder_text = 'Enter search terms';
+		} else {
+			$placeholder_text = 'Enter one or more search terms';
+		}
 		
 		$return_html = '<input type="text" name="STerms"'
 			. (isset($search_params['STerms']) ? ' value="' . htmlspecialchars($search_params['STerms']) . '"' : '')
-			. ' placeholder="Enter one or more search terms" class="form-control">';
+			. ' placeholder="' . $placeholder_text . '" class="form-control">';
 				
 		return $return_html;
 	}
@@ -770,17 +907,24 @@ class CIOC_RSD_Public {
 		$sc_options = shortcode_atts ( array (
 				'viewtype' => NULL,
 				'ln' => NULL,
-				'quicklist' => NULL
+				'quicklist' => NULL,
+				'shortplaceholder' => FALSE
 		), $atts );
 	
 		return $this->quicklist_dropdown($sc_options);
 	}
 	
-	public function quicklist_dropdown($sc_options, &$type = NULL) {
+	protected function quicklist_dropdown($sc_options, &$type = NULL) {
 		$options = get_option ( 'ciocrsd_settings' );
 	
 		$fetch_url = $options['ciocrsd_cioc_url'];
 		$return_html = '';
+		
+		if ($sc_options['shortplaceholder']) {
+			$placeholder_text = 'Category';
+		} else {
+			$placeholder_text = 'Select a Category';
+		}
 	
 		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {			
 			$quicklist_type = $sc_options['quicklist'];
@@ -824,7 +968,7 @@ class CIOC_RSD_Public {
 					$type = $select_name;
 					if (isset($json_data->{'quicklist'}) && count($json_data->{'quicklist'}) > 0) {
 						$return_html .= '<select name="' . $select_name . '" class="form-control">'
-							. '<option value=""> -- Select a Category -- </option>'; 
+							. '<option value=""> -- ' . $placeholder_text . ' -- </option>'; 
 						foreach ( $json_data->{'quicklist'} as $record_row ) {
 							$record_id = (isset($record_row->{$id_type}) ? $record_row->{$id_type} : NULL);
 							$record_id = $this->clean_id($record_id);
@@ -856,6 +1000,12 @@ class CIOC_RSD_Public {
 	
 		$fetch_url = $options['ciocrsd_cioc_url'];
 		$return_html = '';
+		
+		if ($sc_options['shortplaceholder']) {
+			$placeholder_text = '';
+		} else {
+			$placeholder_text = 'Select a ';
+		}
 	
 		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {
 
@@ -879,17 +1029,17 @@ class CIOC_RSD_Public {
 				} else {
 					$search_params = $this->set_search_terms($sc_options);				
 					if (count($json_data) > 0) {
-						$drop_down_title = "Select a Community";
+						$drop_down_title = "Community";
 						if ($sc_options['limitcmtype']) {
 							$return_html .= '<input type="hidden" name="CMType" value="' . $sc_options['limitcmtype'] . '">';
 							if ($sc_options['limitcmtype'] === 'L') {
-								$drop_down_title = "Select a Location";
+								$drop_down_title = "Location";
 							} elseif ($sc_options['limitcmtype'] === 'S') {
-								$drop_down_title = "Select a Service Area";
+								$drop_down_title = "Service Area";
 							}
 						}
 						$return_html .= '<select name="CMID" class="form-control">'
-							. '<option value=""> -- ' . $drop_down_title . ' -- </option>'; 
+							. '<option value=""> -- ' . $placeholder_text . $drop_down_title . ' -- </option>'; 
 						foreach ( $json_data as $record_row ) {
 							$record_id = (isset($record_row->{'chkid'}) ? $record_row->{'chkid'} : NULL);
 							$record_id = $this->clean_id($record_id);
@@ -926,6 +1076,7 @@ class CIOC_RSD_Public {
 					'community' => TRUE,
 					'limitcmtype' => NULL,
 					'multiformid' => '',
+					'shortplaceholder' => FALSE,
 					'clearbutton' => FALSE
 			), $atts );
 				
@@ -962,7 +1113,7 @@ class CIOC_RSD_Public {
 					$form_action = $target_results;
 				}
 				
-				$return_html = '<form action="' . $form_action . '" method="GET" name="CIOCRSDSearch' . $multiform_id . '" class="form-horizontal">'
+				$return_html = '<form action="' . $form_action . '" method="GET" name="CIOCRSDSearch' . $multiform_id . '" class="form-horizontal ciocrsd-search-form">'
 						. '<input type="hidden" name="dosearch" value="on">';
 				
 				if ($sc_options['keywords']) {

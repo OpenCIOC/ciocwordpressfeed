@@ -30,7 +30,8 @@ div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
 }
 
 .ciocrsd-field-group-row {
-	margin-bottom: .5em;
+	margin-bottom: .75em;
+	clear: both;
 }
 
 .ciocrsd-field-label {
@@ -38,15 +39,28 @@ div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
 }
 
 .ciocrsd-record-detail .ciocrsd-field-label {
-	font-size: larger;	
+	font-size: 120%;	
 }
 
-.ciocrsd-field-content {
-	padding-left: 2.5em;
+.ciocrsd-search-result .ciocrsd-field-label {
+	font-size: 115%;	
+}
+
+.ciocrsd-field-label .fa, .ciocrsd-field-label .glyphicon {
+	min-width: 1.5em;
+	text-align: center;
+}
+
+.ciocrsd-record-detail .ciocrsd-field-label .fa, .ciocrsd-record-detail .ciocrsd-field-label .glyphicon {
+	font-size: 125%;	
 }
 
 .ciocrsd-field-content_full {
 
+}
+
+.address-mapped {
+	float: left;
 }
 
 .atgoeshere::before {
@@ -56,7 +70,7 @@ div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
 .ciocrsd-record-detail {
 	padding-bottom: .75em;
 	margin-bottom: 2em;
-	border-bottom: thin solid #ccc;
+	border-bottom: thin solid #ddd;
 }
 
 .ciocrsd-record-detail > h2.ciocrsd-org-name {
@@ -72,6 +86,18 @@ div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
 	max-height: 130px;
 }
 
+.ciocrsd-record-detail .ciocrsd-field-content {
+	padding-left: 2.6em;
+}
+
+.ciocrsd-search-result .ciocrsd-field-content {
+	padding-left: 2.1em;
+}
+
+.ciocrsd-search-form {
+	margin-bottom: 1em;
+}
+
 .ciocrsd-search-results > .ciocrsd-search-result > h2.ciocrsd-org-name {
 	margin-top: .5em;
 	margin-bottom: .75em;
@@ -80,7 +106,7 @@ div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
 
 .ciocrsd-search-result {
 	margin-top: 1.5em;
-	border-top: thin solid #ccc;
+	border-top: thin solid #ddd;
 }
 
 .ciocrsd-search-buttons {
@@ -115,15 +141,31 @@ input.form-control, select.form-control {
 
 div.DetailsMapCanvas {
 	width: 330px;
+	min-width: 50%;
 	height: 175px;
 	float: right;
 }
 
-.ciocrsd-field-label .fa {
-	min-width: 1.5em;
-	text-align: center;
+.ciocrsd-quicklist-browse {
+	vertical-align: middle;
 }
 
+.ciocrsd-quicklist-browse li {
+	margin-bottom: .5em;
+	list-style-type: none;
+}
+
+.ciocrsd-quicklist-browse a {
+	font-size: 120%;
+}
+
+.ciocrsd-count-bubble {
+	display: inline-block;
+	margin: 0 .25em;
+	padding: 0 .5em;
+	border: thin solid #ddd;
+	border-radius: 10px;
+}
 
 @media (max-width: 767px) {
 	.ciocrsd-logo-container {
