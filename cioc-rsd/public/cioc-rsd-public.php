@@ -387,9 +387,10 @@ class CIOC_RSD_Public {
 	
 	public function count_all_in_view($atts) {
 		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$return_html = '';
 		
-		if ($fetch_url) {
+		if ($fetch_url && !empty($fetch_headers)) {
 			$sc_options = shortcode_atts ( array (
 					'viewtype' => NULL,
 					'ln' => NULL,
@@ -400,10 +401,10 @@ class CIOC_RSD_Public {
 			
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 			
-			$response = wp_remote_get( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params, array('headers' => $fetch_headers));
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable publinc (<?= wp_remote_retrieve_response_message($response) ?>)</div>
 				<?php
 			} else {
 				$content = wp_remote_retrieve_body($response);		
@@ -438,9 +439,10 @@ class CIOC_RSD_Public {
 		}
 	
 		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$return_html = '';
 	
-		if ($fetch_url) {
+		if ($fetch_url && !empty($fetch_headers)) {
 			$sc_options = shortcode_atts ( array (
 					'viewtype' => NULL,
 					'ln' => NULL,
@@ -463,87 +465,95 @@ class CIOC_RSD_Public {
 				if (!preg_match('/^[A-Za-z]{3}[0-9]{4,5}$/', $num)) {
 					$return_html = '<div class="ciocrsd-alert">Error: Invalid Record Number</div>' . $num;
 				} else {
-					$content = file_get_contents ( $fetch_url . '/rpc/record/' . $num . '?texttohtml=1&' . $fetch_url_params);
-					$json_data = json_decode ( $content );
-	
-					$return_html = '';
-					$org_name_html = '';
-					
-					if (! json_last_error() == JSON_ERROR_NONE) {
-						$return_html = '<div class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</div>';
-					} elseif ($content === FALSE) {
-						$return_html = '<div class="ciocrsd-alert">Error: Record not available</div>';
+					$response = wp_remote_get($fetch_url . '/rpc/record/' . $num . '?texttohtml=1&' . $fetch_url_params, array('headers' => $fetch_headers)); 
+
+					if (wp_remote_retrieve_response_code($response) != 200) {
+						?>
+							<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+						<?php
 					} else {
-						$org_name = $json_data->{'ORG_LEVEL_1'};
-						$org_name_full = $json_data->{'orgname'};
-						$org_name_html = '<h2 class="ciocrsd-org-name">' . $org_name . '</h2>';
-						if ($org_name != $org_name_full) {
-							$org_name_remainder = str_replace($org_name . ', ', '', $org_name_full);
-							$org_name_html .= '<h3 class="ciocrsd-org-name">' . $org_name_remainder . '</h3>';
-						}
-						$logo = NULL;
-
-						foreach ( $json_data->{'field_groups'} as $field_group ) {
-							$field_group_section_data = '';
-							foreach ( $field_group->{'fields'} as $field ) {
-								$field_value = $field->{'value'};
-								$field_name = $field->{'name'};
-								$field_label = $field->{'display_name'};
-															
-								if ($field_name == 'LOGO_ADDRESS' && $field_value) {
-									$logo = '<div class="ciocrsd-logo-container">' . $field_value . '</div>';
-								} else {
-									$allow_html =  isset($field->{'allow_html'}) ? $field->{'allow_html'} : FALSE;
-									if ($field_value) {
-										$field_group_section_data .= $this->render_field($field_name, $field_label, $field_value, $allow_html, $add_icons);
-									}	
-								}
-							}
-							if ($field_group_section_data) {
-								if ($show_field_groups) {
-									$return_html .= '<h4 class="ciocrsd-field-group">' . $field_group->{'name'} . '</h4>';
-								}
-								$return_html .= $field_group_section_data;
-							}
-						}
+						$content = wp_remote_retrieve_body($response);		
+						$json_data = json_decode ( $content );
+		
+						$return_html = '';
+						$org_name_html = '';
 						
-						$return_html .= '<h4 class="ciocrsd-field-group">About this Information</h4>';
-		
-						$last_modified = $json_data->{'modified_date'};
-						$last_updated = $json_data->{'update_date'};
-						if ($last_modified || $last_updated) {
-							$return_html .= '<div class="ciocrsd-field-group-row">'
-									. '<div class="ciocrsd-last-mod">';
-							if ($last_modified) {
-								$return_html .= 'Last Modified: ' . $last_modified;
-							}
-							if ($last_modified && $last_updated) {
-								$return_html .= ' | ';
-							}
-							if ($last_updated) {
-								$return_html .= 'Last Full Update: ' . $last_updated;
-							}
-							$return_html .= '</div>'
-									. '</div>';
-						}
-		
-						$suggest_update = $json_data->{'feedback_link'};
-						if (!filter_var ( $suggest_update, FILTER_VALIDATE_URL ) === FALSE) {
-							$return_html .= '<div class="ciocrsd-field-group-row">' 
-									. '<div class="ciocrsd-suggest-update"><a href="' . $suggest_update . '" target="_blank">Suggest a change to this information</a></div>'
-									. '</div>';
-						}
-
-						if ($logo) {
-							$return_html = '<div class="ciocrsd-record-header">'
-								. $logo . '<div class="ciocrsd-org-name-container">' . $org_name_html . '</div>'
-								. '</div>' . $return_html;
+						if (! json_last_error() == JSON_ERROR_NONE) {
+							$return_html = '<div class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</div>';
+						} elseif ($content === FALSE) {
+							$return_html = '<div class="ciocrsd-alert">Error: Record not available</div>';
 						} else {
-							$return_html = '<div class="ciocrsd-record-header">' . $org_name_html . '</div>' . $return_html;
+							$org_name = $json_data->{'ORG_LEVEL_1'};
+							$org_name_full = $json_data->{'orgname'};
+							$org_name_html = '<h2 class="ciocrsd-org-name">' . $org_name . '</h2>';
+							if ($org_name != $org_name_full) {
+								$org_name_remainder = str_replace($org_name . ', ', '', $org_name_full);
+								$org_name_html .= '<h3 class="ciocrsd-org-name">' . $org_name_remainder . '</h3>';
+							}
+							$logo = NULL;
+
+							foreach ( $json_data->{'field_groups'} as $field_group ) {
+								$field_group_section_data = '';
+								foreach ( $field_group->{'fields'} as $field ) {
+									$field_value = $field->{'value'};
+									$field_name = $field->{'name'};
+									$field_label = $field->{'display_name'};
+																
+									if ($field_name == 'LOGO_ADDRESS' && $field_value) {
+										$logo = '<div class="ciocrsd-logo-container">' . $field_value . '</div>';
+									} else {
+										$allow_html =  isset($field->{'allow_html'}) ? $field->{'allow_html'} : FALSE;
+										if ($field_value) {
+											$field_group_section_data .= $this->render_field($field_name, $field_label, $field_value, $allow_html, $add_icons);
+										}	
+									}
+								}
+								if ($field_group_section_data) {
+									if ($show_field_groups) {
+										$return_html .= '<h4 class="ciocrsd-field-group">' . $field_group->{'name'} . '</h4>';
+									}
+									$return_html .= $field_group_section_data;
+								}
+							}
+							
+							$return_html .= '<h4 class="ciocrsd-field-group">About this Information</h4>';
+			
+							$last_modified = $json_data->{'modified_date'};
+							$last_updated = $json_data->{'update_date'};
+							if ($last_modified || $last_updated) {
+								$return_html .= '<div class="ciocrsd-field-group-row">'
+										. '<div class="ciocrsd-last-mod">';
+								if ($last_modified) {
+									$return_html .= 'Last Modified: ' . $last_modified;
+								}
+								if ($last_modified && $last_updated) {
+									$return_html .= ' | ';
+								}
+								if ($last_updated) {
+									$return_html .= 'Last Full Update: ' . $last_updated;
+								}
+								$return_html .= '</div>'
+										. '</div>';
+							}
+			
+							$suggest_update = $json_data->{'feedback_link'};
+							if (!filter_var ( $suggest_update, FILTER_VALIDATE_URL ) === FALSE) {
+								$return_html .= '<div class="ciocrsd-field-group-row">' 
+										. '<div class="ciocrsd-suggest-update"><a href="' . $suggest_update . '" target="_blank">Suggest a change to this information</a></div>'
+										. '</div>';
+							}
+
+							if ($logo) {
+								$return_html = '<div class="ciocrsd-record-header">'
+									. $logo . '<div class="ciocrsd-org-name-container">' . $org_name_html . '</div>'
+									. '</div>' . $return_html;
+							} else {
+								$return_html = '<div class="ciocrsd-record-header">' . $org_name_html . '</div>' . $return_html;
+							}
+							
+							$return_html = '<div class="ciocrsd-record-detail"' . $google_maps_key . '>' .  $return_html . '</div>';
+							
 						}
-						
-						$return_html = '<div class="ciocrsd-record-detail"' . $google_maps_key . '>' .  $return_html . '</div>';
-						
 					}
 				}
 			}
@@ -567,6 +577,7 @@ class CIOC_RSD_Public {
 		), $atts );
 	
 		$fetch_url = $fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$return_html = '';
 
 		$target_results = $sc_options ['targetresults'];
@@ -586,7 +597,7 @@ class CIOC_RSD_Public {
 			$show_count = FALSE;
 		}
 		
-		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {
+		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {
 			$quicklist_type = $sc_options['quicklist'];
 			$pubcode = NULL;
 			if ($quicklist_type && $quicklist_type != 'DEFAULT') {
@@ -606,7 +617,7 @@ class CIOC_RSD_Public {
 	
 			$fetch_url_params = $this->process_fetch_url_params($sc_options, $add_params);
 	
-			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers));
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 						<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
@@ -704,10 +715,11 @@ class CIOC_RSD_Public {
 		}
 	
 		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$search_params = [];
 		$return_html = '';
 	
-		if ($fetch_url) {
+		if ($fetch_url && !empty($fetch_headers)) {
 			$sc_options = shortcode_atts ( array (
 					'viewtype' => NULL,
 					'ln' => NULL,
@@ -760,94 +772,101 @@ class CIOC_RSD_Public {
 				} else {
 					$fetch_url_params = $this->process_fetch_url_params($sc_options, $search_params);
 					
-					$content = file_get_contents ( $fetch_url . '/rpc/orgsearch.asp?' . $fetch_url_params);
-					$json_data = json_decode ( $content );
-					
-					if (! json_last_error() == JSON_ERROR_NONE) {
-						$return_html = '<div class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</div>';
-					} elseif ($content === FALSE) {
-						$return_html = '<div class="ciocrsd-alert">Error: No search data is being returned. Contact the site administrator.</div>';
-					} elseif (! is_null ( $json_data->{'error'} )) {
-						$return_html = '<p>' . htmlspecialchars ( $json_data->{'error'} ) . '</p>';
-					} elseif (! isset($json_data->{'recordset'}) || ! is_array($json_data->{'recordset'})) {
-						$return_html .= '<div class="ciocrsd-results-count">No results</div>';
+					$response = wp_remote_get($fetch_url . '/rpc/orgsearch.asp?' . $fetch_url_params, array('headers' => $fetch_headers));
+					if (wp_remote_retrieve_response_code($response) != 200) {
+						?>
+							<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+						<?php
 					} else {
-						if (!$sc_options['nocount']) {
-							$return_html .= '<div class="ciocrsd-results-count">Returned ' . count($json_data->{'recordset'}) . ' results</div>';
-						}
-						foreach ( $json_data->{'recordset'} as $record_row ) {
-							$num = isset($record_row->{'NUM'}) ? $record_row->{'NUM'} : NULL;
-							if ($num) {
-								$ignore_fields = array ( 
-										'NUM', 
-										'LATITUDE', 
-										'LONGITUDE',
-										'LOGO_ADDRESS',
-										'ORG_NAME', 
-										'RECORD_DETAILS', 
-										'API_RECORD_DETAILS', 
-										'LOCATED_IN_CM',
-										'DESCRIPTION', 
-										'DESCRIPTION_SHORT' 
-								);
-								
-								$logo = isset($record_row->{'LOGO_ADDRESS'}) ? $record_row->{'LOGO_ADDRESS'} : NULL;
-								$org_name = isset($record_row->{'ORG_NAME'}) ? $record_row->{'ORG_NAME'} : $num;
-								$org_location = isset($record_row->{'LOCATED_IN_CM'}) ? $record_row->{'LOCATED_IN_CM'} : NULL;
-								$org_desc = isset($record_row->{'DESCRIPTION_SHORT'}) ? $record_row->{'DESCRIPTION_SHORT'} : 
-										(isset($record_row->{'DESCRIPTION'}) ? $record_row->{'DESCRIPTION'} : NULL);
-								
-								$record_link = NULL;
-								
-								$return_html .= '<div class="ciocrsd-search-result">';
-								
-								if ($logo) {
-									$return_html .= '<div class="ciocrsd-logo-container">' . $logo . '</div>';	
-								}
-								
-								if ($sc_options['nolink']) {
-									$return_html .= '<h2 class="ciocrsd-org-name">' . $org_name . '</h2>';
-								} else {
-									if ($sc_options['ciocdetails'] && isset($record_row->{'RECORD_DETAILS'})) {
-										$record_link = $record_row->{'RECORD_DETAILS'};
-									} elseif ($target_details) {
-										$record_link = $target_details . '?num=' . $num;
-									} else {
-										$record_link = $num;
+						$content = wp_remote_retrieve_body($response);		
+						$json_data = json_decode ( $content );
+						
+						if (! json_last_error() == JSON_ERROR_NONE) {
+							$return_html = '<div class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</div>';
+						} elseif ($content === FALSE) {
+							$return_html = '<div class="ciocrsd-alert">Error: No search data is being returned. Contact the site administrator.</div>';
+						} elseif (! is_null ( $json_data->{'error'} )) {
+							$return_html = '<p>' . htmlspecialchars ( $json_data->{'error'} ) . '</p>';
+						} elseif (! isset($json_data->{'recordset'}) || ! is_array($json_data->{'recordset'})) {
+							$return_html .= '<div class="ciocrsd-results-count">No results</div>';
+						} else {
+							if (!$sc_options['nocount']) {
+								$return_html .= '<div class="ciocrsd-results-count">Returned ' . count($json_data->{'recordset'}) . ' results</div>';
+							}
+							foreach ( $json_data->{'recordset'} as $record_row ) {
+								$num = isset($record_row->{'NUM'}) ? $record_row->{'NUM'} : NULL;
+								if ($num) {
+									$ignore_fields = array ( 
+											'NUM', 
+											'LATITUDE', 
+											'LONGITUDE',
+											'LOGO_ADDRESS',
+											'ORG_NAME', 
+											'RECORD_DETAILS', 
+											'API_RECORD_DETAILS', 
+											'LOCATED_IN_CM',
+											'DESCRIPTION', 
+											'DESCRIPTION_SHORT' 
+									);
+									
+									$logo = isset($record_row->{'LOGO_ADDRESS'}) ? $record_row->{'LOGO_ADDRESS'} : NULL;
+									$org_name = isset($record_row->{'ORG_NAME'}) ? $record_row->{'ORG_NAME'} : $num;
+									$org_location = isset($record_row->{'LOCATED_IN_CM'}) ? $record_row->{'LOCATED_IN_CM'} : NULL;
+									$org_desc = isset($record_row->{'DESCRIPTION_SHORT'}) ? $record_row->{'DESCRIPTION_SHORT'} : 
+											(isset($record_row->{'DESCRIPTION'}) ? $record_row->{'DESCRIPTION'} : NULL);
+									
+									$record_link = NULL;
+									
+									$return_html .= '<div class="ciocrsd-search-result">';
+									
+									if ($logo) {
+										$return_html .= '<div class="ciocrsd-logo-container">' . $logo . '</div>';	
 									}
-									$return_html .= '<h2 class="ciocrsd-org-name"><a href="' . $record_link . '">' . $org_name . '</a></h2>';
-								}
-								if ($org_location) {
-									$return_html .= '<div class="ciocrsd-field-group-row">'
-											. '<div class="ciocrsd-field-label ciocrsd-LOCATED_IN_CM">'
-											. '<i class="fa fa-map-marker" aria-hidden="true"></i> '
-											. htmlspecialchars_decode($org_location)
-											. '</div>'
-											. '</div>';
-								}
-								
-								foreach ($record_row as $field_name => $field_value) {
-									if (!in_array ($field_name, $ignore_fields)) {
-										if ($field_value) {
-											$allow_html =  TRUE;
-											$field_label = (isset($json_data->fields->{$field_name}) ? $json_data->fields->{$field_name} : $field_name);
-											$return_html .= $this->render_field($field_name, $field_label, $field_value, $allow_html, $add_icons);
+									
+									if ($sc_options['nolink']) {
+										$return_html .= '<h2 class="ciocrsd-org-name">' . $org_name . '</h2>';
+									} else {
+										if ($sc_options['ciocdetails'] && isset($record_row->{'RECORD_DETAILS'})) {
+											$record_link = $record_row->{'RECORD_DETAILS'};
+										} elseif ($target_details) {
+											$record_link = $target_details . '?num=' . $num;
+										} else {
+											$record_link = $num;
+										}
+										$return_html .= '<h2 class="ciocrsd-org-name"><a href="' . $record_link . '">' . $org_name . '</a></h2>';
+									}
+									if ($org_location) {
+										$return_html .= '<div class="ciocrsd-field-group-row">'
+												. '<div class="ciocrsd-field-label ciocrsd-LOCATED_IN_CM">'
+												. '<i class="fa fa-map-marker" aria-hidden="true"></i> '
+												. htmlspecialchars_decode($org_location)
+												. '</div>'
+												. '</div>';
+									}
+									
+									foreach ($record_row as $field_name => $field_value) {
+										if (!in_array ($field_name, $ignore_fields)) {
+											if ($field_value) {
+												$allow_html =  TRUE;
+												$field_label = (isset($json_data->fields->{$field_name}) ? $json_data->fields->{$field_name} : $field_name);
+												$return_html .= $this->render_field($field_name, $field_label, $field_value, $allow_html, $add_icons);
+											}
 										}
 									}
+									
+									if ($org_desc) {
+										$return_html .= '<div class="ciocrsd-field-group-row">'
+												. '<div class="ciocrsd-field-content-full ciocrsd-DESCRIPTION">'
+												. (((substr($org_desc,-3) == '...') && $record_link) ? ($org_desc . ' <a href="' . $record_link . '">[ More Info ]</a>') : $org_desc)
+												. '</div>'
+												. '</div>';
+									}
+									
+									$return_html .= '</div>';
 								}
-								
-								if ($org_desc) {
-									$return_html .= '<div class="ciocrsd-field-group-row">'
-											. '<div class="ciocrsd-field-content-full ciocrsd-DESCRIPTION">'
-											. (((substr($org_desc,-3) == '...') && $record_link) ? ($org_desc . ' <a href="' . $record_link . '">[ More Info ]</a>') : $org_desc)
-											. '</div>'
-											. '</div>';
-								}
-								
-								$return_html .= '</div>';
 							}
+							$return_html = '<div class="ciocrsd-search-results">' . $return_html . '</div>';
 						}
-						$return_html = '<div class="ciocrsd-search-results">' . $return_html . '</div>';
 					}
 				}
 			}
@@ -862,6 +881,7 @@ class CIOC_RSD_Public {
 		$options = get_option ( 'ciocrsd_settings' );
 		
 		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$return_html = '';
 		
 		$sc_options = shortcode_atts ( array (
@@ -877,11 +897,11 @@ class CIOC_RSD_Public {
 		}
 		
 		
-		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {
+		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {
 						
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 			
-			$response = wp_remote_get( $fetch_url . '/rpc/agegrouplist?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/rpc/agegrouplist?' . $fetch_url_params, array('headers' => $fetch_headers) );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
@@ -958,6 +978,7 @@ class CIOC_RSD_Public {
 		$options = get_option ( 'ciocrsd_settings' );
 	
 		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$return_html = '';
 		
 		if ($sc_options['shortplaceholder']) {
@@ -966,7 +987,7 @@ class CIOC_RSD_Public {
 			$placeholder_text = 'Select a Category';
 		}
 	
-		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {			
+		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {			
 			$quicklist_type = $sc_options['quicklist'];
 			$pubcode = NULL;
 			if ($quicklist_type && $quicklist_type != 'DEFAULT') {
@@ -979,7 +1000,7 @@ class CIOC_RSD_Public {
 				
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 				
-			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers) );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
@@ -1039,6 +1060,7 @@ class CIOC_RSD_Public {
 		$options = get_option ( 'ciocrsd_settings' );
 	
 		$fetch_url = $options['ciocrsd_cioc_url'];
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$return_html = '';
 		
 		if ($sc_options['shortplaceholder']) {
@@ -1047,13 +1069,13 @@ class CIOC_RSD_Public {
 			$placeholder_text = 'Select a ';
 		}
 	
-		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE) {
+		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {
 
 			$limit_type = $sc_options['limitcmtype'];
 
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 	
-			$response = wp_remote_get( $fetch_url . '/jsonfeeds/community_generator.asp?' . $fetch_url_params );
+			$response = wp_remote_get( $fetch_url . '/jsonfeeds/community_generator.asp?' . $fetch_url_params, array('headers' => $fetch_headers) );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
@@ -1100,10 +1122,11 @@ class CIOC_RSD_Public {
 		$options = get_option ( 'ciocrsd_settings' );
 	
 		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		$search_params = [];
 		$return_html = '';
 	
-		if ($fetch_url) {
+		if ($fetch_url && !empty($fetch_headers)) {
 			$sc_options = shortcode_atts ( array (
 					'viewtype' => NULL,
 					'ln' => NULL,

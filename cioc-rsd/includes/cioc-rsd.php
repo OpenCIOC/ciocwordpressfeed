@@ -99,11 +99,8 @@ class CIOC_RSD {
 				$fetch_protocol = empty($fetch_protocol) ? 'https' : $fetch_protocol;
 				$fetch_host = parse_url($fetch_url, PHP_URL_HOST);
 				
-				$fetch_account = $options['ciocrsd_api_id'];
-				$fetch_password = $options['ciocrsd_api_pw'];
-				
-				if (!empty($fetch_protocol) && !empty($fetch_host) && !empty($fetch_account) && !empty($fetch_password)) {
-					$fetch_url = $fetch_protocol . '://' . $fetch_account . ':' . $fetch_password . '@' . $fetch_host;
+				if (!empty($fetch_protocol) && !empty($fetch_host)) {
+					$fetch_url = $fetch_protocol . '://' . $fetch_host;
 				}
 			} else {
 				$fetch_url = null;
@@ -111,6 +108,24 @@ class CIOC_RSD {
 		}
 		
 		return $fetch_url;
+	}
+
+	public function fetch_auth_headers() {
+		$options = get_option ( 'ciocrsd_settings' );
+
+		$headers = array();
+
+		if ($options) {
+			$fetch_account = $options['ciocrsd_api_id'];
+			$fetch_password = $options['ciocrsd_api_pw'];
+
+
+			if (!empty($fetch_account) && !empty($fetch_password)) {
+				$headers = array('Authorization' => 'Basic ' . base64_encode($fetch_account . ':' . $fetch_password));
+			}
+		}
+
+		return $headers;
 	}
 
 	public function do_fetch_url_error() {
@@ -169,9 +184,10 @@ class CIOC_RSD {
 
 	public function count_all_in_view($atts) {
 		$fetch_url = full_fetch_url();
+		$fetch_headers = fetch_auth_headers();
 		$return_html = '';
 		
-		if ($fetch_url) {
+		if ($fetch_url && !empty($fetch_headers)) {
 			$sc_options = shortcode_atts ( array (
 					'viewtype' => NULL,
 					'ln' => NULL,
@@ -182,15 +198,22 @@ class CIOC_RSD {
 			
 			$fetch_url_params = process_fetch_url_params($sc_options);
 			
-			$content = file_get_contents ( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params);
-			$json_data = json_decode ( $content );
-			
-			if (! json_last_error() == JSON_ERROR_NONE ) {
-				$return_html = '<span class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</span>';
-			} elseif ($content === FALSE) {
-				$return_html = '<span class="ciocrsd-alert">Error: Content not available</span>';
+			$response = wp_remote_get( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params, array('headers' => $fetch_headers));
+			if (wp_remote_retrieve_response_code($response) != 200) {
+				?>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+				<?php
 			} else {
-				$return_html = $json_data->{'RecordCount'};
+				$content = wp_remote_retrieve_body($response);		
+				$json_data = json_decode ( $content );
+				
+				if (! json_last_error() == JSON_ERROR_NONE ) {
+					$return_html = '<span class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</span>';
+				} elseif ($content === FALSE) {
+					$return_html = '<span class="ciocrsd-alert">Error: Content not available</span>';
+				} else {
+					$return_html = $json_data->{'RecordCount'};
+				}
 			}
 		} else {
 			do_fetch_url_error();

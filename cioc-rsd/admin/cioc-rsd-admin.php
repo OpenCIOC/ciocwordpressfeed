@@ -147,6 +147,7 @@ class CIOC_RSD_Admin {
 	
 	public function authentication_settings_section_callback() {
 		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
 		?>
 		<p>Please indicate the CIOC site you are working against, and your API
 		credentials. The database URL should support SSL. Include the protocol
@@ -159,11 +160,11 @@ class CIOC_RSD_Admin {
 		and it is strongly recommended that you create API-only accounts for production use
 		to ensure that data access permissions are safe and secure. Never allow an account
 		with access to non-public information to be used for public API use.</p>
-		
+
 		<h4>Testing Account settings...</h4>
 		<?php
-		if ($fetch_url) {
-			$response = wp_remote_get( $fetch_url . '/rpc/whoami' );
+		if ($fetch_url && !empty($fetch_headers)) {
+			$response = wp_remote_get( $fetch_url . '/rpc/whoami', array('headers' => $fetch_headers));
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
 				<div class="ciocrsd-alert">WARNING: Authorization failed (<?= wp_remote_retrieve_response_message($response) ?>)</div>
@@ -196,7 +197,7 @@ class CIOC_RSD_Admin {
 			<div class="ciocrsd-alert">WARNING: URL not properly set</div>
 			<?php
 		}
-			
+
 	}
 
 }
