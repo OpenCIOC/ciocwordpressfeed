@@ -1067,12 +1067,6 @@ class CIOC_RSD_Public {
 		$fetch_headers = $this->parent->fetch_auth_headers();
 		$return_html = '';
 		
-		if ($sc_options['shortplaceholder']) {
-			$placeholder_text = 'Category';
-		} else {
-			$placeholder_text = 'Select a Category';
-		}
-	
 		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {			
 			$quicklist_type = $sc_options['quicklist'];
 			$pubcode = NULL;
