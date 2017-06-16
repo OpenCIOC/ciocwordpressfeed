@@ -22,7 +22,7 @@ div.ciocrsd-alert, div.ciocrsd-success {
 	margin-bottom: 1em;;	
 }
 
-div.ciocrsd-record-detail >  h4.ciocrsd-field-group {
+div.ciocrsd-record-detail >  h3.ciocrsd-field-group {
 	margin-top: 1.5em;
 	margin-bottom: .75em;
 	padding-top: .25em;

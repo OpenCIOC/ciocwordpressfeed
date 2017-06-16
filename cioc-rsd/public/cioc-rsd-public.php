@@ -101,7 +101,8 @@ class CIOC_RSD_Public {
 				'USAGE_COUNT_P' => 'fa fa-line-chart',
 				'USAGE_COUNT_S' => 'fa fa-line-chart',
 				'VOLCONTACT' => 'fa fa-users',
-				'WWW_ADDRESS' => 'fa fa-link'
+				'WWW_ADDRESS' => 'fa fa-link',
+				'WWW_ADDRESS_NW' => 'fa fa-link'
 		);
 	}
 
@@ -510,13 +511,13 @@ class CIOC_RSD_Public {
 								}
 								if ($field_group_section_data) {
 									if ($show_field_groups) {
-										$return_html .= '<h4 class="ciocrsd-field-group">' . $field_group->{'name'} . '</h4>';
+										$return_html .= '<h3 class="ciocrsd-field-group">' . $field_group->{'name'} . '</h3>';
 									}
 									$return_html .= $field_group_section_data;
 								}
 							}
 							
-							$return_html .= '<h4 class="ciocrsd-field-group">About this Information</h4>';
+							$return_html .= '<h3 class="ciocrsd-field-group">About this Information</h3>';
 			
 							$last_modified = $json_data->{'modified_date'};
 							$last_updated = $json_data->{'update_date'};
@@ -676,7 +677,7 @@ class CIOC_RSD_Public {
 												}
 												$cat_icon = '<i class="' . $cat_icon . '" aria-hidden="true"></i>';
 											}
-											$return_html .= '<h4>' . $cat_icon . ' ' . $this_group . '</h4>';	
+											$return_html .= '<h3>' . $cat_icon . ' ' . $this_group . '</h3>';	
 										}
 										$return_html .= '<ul>';
 									}
