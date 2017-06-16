@@ -137,6 +137,7 @@ class CIOC_RSD_Public {
 		add_shortcode ( 'ciocrsd-keyword', array ( $this, 'keyword_textbox_wrapper' ) );
 		add_shortcode ( 'ciocrsd-community', array ( $this, 'community_dropdown_wrapper' ) );
 		add_shortcode ( 'ciocrsd-quicklist', array ( $this, 'quicklist_dropdown_wrapper' ) );
+		add_shortcode ( 'ciocrsd-quicklistbuttons', array ( $this, 'quicklist_buttons_wrapper' ) );
 		add_shortcode ( 'ciocrsd-agegroup', array ( $this, 'agegroup_dropdown_wrapper' ) );
 	}
 
@@ -1046,6 +1047,93 @@ class CIOC_RSD_Public {
 		}
 		return $return_html;
 	}
+
+	public function quicklist_buttons_wrapper($atts) {
+		$sc_options = shortcode_atts ( array (
+				'viewtype' => NULL,
+				'ln' => NULL,
+				'quicklist' => NULL,
+				'gridclass' => 'col-xs-12',
+				'buttonclass' => NULL,
+		), $atts );
+	
+		return $this->quicklist_buttons($sc_options);
+	}
+
+	public function quicklist_buttons($sc_options, &$type = NULL) {
+		$options = get_option ( 'ciocrsd_settings' );
+	
+		$fetch_url = $this->parent->full_fetch_url();
+		$fetch_headers = $this->parent->fetch_auth_headers();
+		$return_html = '';
+		
+		if ($sc_options['shortplaceholder']) {
+			$placeholder_text = 'Category';
+		} else {
+			$placeholder_text = 'Select a Category';
+		}
+	
+		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {			
+			$quicklist_type = $sc_options['quicklist'];
+			$pubcode = NULL;
+			if ($quicklist_type && $quicklist_type != 'DEFAULT') {
+				$pubcode = $this->clean_pubcode($quicklist_type);
+			}
+			$pubcode_path = '';
+			if ($pubcode) {
+				$pubcode_path = '/' . $pubcode;
+			}
+				
+			$fetch_url_params = $this->process_fetch_url_params($sc_options);
+				
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers) );
+			if (wp_remote_retrieve_response_code($response) != 200) {
+				?>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+				<?php
+			} else {
+				$content = wp_remote_retrieve_body($response);		
+				$json_data = json_decode ( $content );
+			
+				if (! json_last_error() == JSON_ERROR_NONE ) {
+					$return_html = '<span class="ciocrsd-alert">Error: ' . json_last_error_msg() . '</span>';
+				} elseif ($content === FALSE) {
+					$return_html = '<span class="ciocrsd-alert">Error: Content not available</span>';
+				} else {
+					$is_heading = $json_data->{'type'} == 'Headings';
+					if ($is_heading) {
+						$select_name = 'GHID';
+						$id_type = 'GH_ID';
+						$quicklist_name = 'GeneralHeading';
+					} else {
+						$select_name = 'PBID';
+						$id_type = 'PB_ID';
+						$quicklist_name = 'PubName';
+					}
+					$type = $select_name;
+					$buttonclass = '';
+					if (isset($sc_options['buttonclass'])) {
+						$buttonclass = ' class="'. $sc_options['buttonclass'] . '"';
+					}
+					if (isset($json_data->{'quicklist'}) && count($json_data->{'quicklist'}) > 0) {
+						$return_html .= '<div class="row">';
+						$gridclass = $sc_options['gridclass'];
+						foreach ( $json_data->{'quicklist'} as $record_row ) {
+							$record_id = (isset($record_row->{$id_type}) ? $record_row->{$id_type} : NULL);
+							$record_id = $this->clean_id($record_id);
+							if ($record_id) {
+								$return_html .= '<div class="' . $gridclass . '"><button type="submit" name="'. $type . ' value="' . $record_id . '"'. $buttonclass . '>' 
+									. $record_row->{$quicklist_name} . '</button></div>';
+							}
+						}
+						$return_html .= '</div>';
+					}
+				}
+			}
+		}
+		return $return_html;
+	}
+	
 	
 	public function community_dropdown_wrapper($atts) {
 		$sc_options = shortcode_atts ( array (
