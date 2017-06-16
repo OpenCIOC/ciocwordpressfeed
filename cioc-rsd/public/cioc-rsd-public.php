@@ -1133,7 +1133,8 @@ class CIOC_RSD_Public {
 		$sc_options = shortcode_atts ( array (
 				'viewtype' => NULL,
 				'ln' => NULL,
-				'limitcmtype' => NULL
+				'limitcmtype' => NULL,
+				'shortplaceholder' => FALSE
 		), $atts );
 		
 		return $this->community_dropdown($sc_options);
