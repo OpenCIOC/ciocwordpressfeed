@@ -1116,7 +1116,7 @@ class CIOC_RSD_Public {
 							$record_id = (isset($record_row->{$id_type}) ? $record_row->{$id_type} : NULL);
 							$record_id = $this->clean_id($record_id);
 							if ($record_id) {
-								$return_html .= '<div class="' . $gridclass . '"><button type="submit" name="'. $type . ' value="' . $record_id . '"'. $buttonclass . '>' 
+								$return_html .= '<div class="' . $gridclass . '"><button type="submit" name="'. $type . '" value="' . $record_id . '"' . $buttonclass . '>' 
 									. $record_row->{$quicklist_name} . '</button></div>';
 							}
 						}
