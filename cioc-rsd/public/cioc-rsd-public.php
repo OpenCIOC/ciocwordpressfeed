@@ -121,11 +121,13 @@ class CIOC_RSD_Public {
 		}
 		if (!$no_bs) {
 			wp_enqueue_style( 'bs-glyphicons', 'https://d3byedob0d0n2o.cloudfront.net/bootstrap-3.3.5/glyphicons.css');
+			wp_enqueue_style( 'bs-modal',  $this->parent->plugin_main_dir . 'css/bootstrap-modal.min.css', array(), $this->version);
 		}
 	}
 
 	public function enqueue_scripts() {
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cioc-rsd-public.js', array( 'jquery' ), $this->version, TRUE );
+		wp_enqueue_script( 'bs-modal-script', plugin_dir_url( __FILE__ ) . 'js/bootstrap-modal.min.js', array( 'jquery' ), $this->version, TRUE );
 	}
 	
 	public function register_shortcodes() {
@@ -1141,7 +1143,8 @@ class CIOC_RSD_Public {
 				'viewtype' => NULL,
 				'ln' => NULL,
 				'limitcmtype' => NULL,
-				'shortplaceholder' => FALSE
+				'shortplaceholder' => FALSE,
+				'cmpromptunfilled' => FALSE
 		), $atts );
 		
 		return $this->community_dropdown($sc_options);
@@ -1163,6 +1166,7 @@ class CIOC_RSD_Public {
 		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {
 
 			$limit_type = $sc_options['limitcmtype'];
+			$prompt_unfilled = $sc_options['cmpromptunfilled'];
 
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 	
@@ -1191,7 +1195,12 @@ class CIOC_RSD_Public {
 								$drop_down_title = "Service Area";
 							}
 						}
-						$return_html .= '<select name="CMID" class="form-control">'
+						if($prompt_unfilled) {
+							$prompt_unfilled = ' data-unfilled-prompt="true"';
+						} else {
+							$prompt_unfilled = '';
+						}
+						$return_html .= '<select name="CMID" class="form-control"' . $prompt_unfilled . '>'
 							. '<option value=""> -- ' . $placeholder_text . $drop_down_title . ' -- </option>'; 
 						foreach ( $json_data as $record_row ) {
 							$record_id = (isset($record_row->{'chkid'}) ? $record_row->{'chkid'} : NULL);
@@ -1231,7 +1240,8 @@ class CIOC_RSD_Public {
 					'limitcmtype' => NULL,
 					'multiformid' => '',
 					'shortplaceholder' => FALSE,
-					'clearbutton' => FALSE
+					'clearbutton' => FALSE,
+					'cmpromptunfilled' => FALSE
 			), $atts );
 				
 			$this->check_domain($sc_options, 'cic');
