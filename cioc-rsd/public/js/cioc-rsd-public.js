@@ -30,10 +30,6 @@
 	 */
 	var start_cm_unfilled_detector = function() {
 		var handle_submit = function(evt) {
-
-			evt.preventDefault();
-			evt.stopPropagation()	
-
 			var self = $(this), unfilled_cm = self.find("select[data-unfilled-prompt=true]");
 			if (!unfilled_cm.length) {
 				return;
@@ -42,6 +38,10 @@
 			if (unfilled_cm.val()) {
 				return;
 			}
+
+			evt.preventDefault();
+			evt.stopPropagation()	
+
 
 			var modal = $('#cm-unfilled-prompt');
 			if (modal.length === 0) {
