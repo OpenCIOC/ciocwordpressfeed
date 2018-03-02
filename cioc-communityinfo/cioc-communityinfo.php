@@ -2,7 +2,7 @@
 /*
  * Plugin Name: CIOC Community Information Feeds
  * Description: This plugin provides integration shortcodes for feeds from the CIOC Software Community Information module
- * Version: 1.0.2
+ * Version: 1.1
  * Author: Katherine Lambacher
  * Author URI: http://www.kclsoftware.com
  * License: Apache 2.0
@@ -105,78 +105,89 @@ function cioc_cominfo_search_feed_list($atts) {
 		}
 	}
 	
-	$content = file_get_contents ( $fetch_url );
-	$json_data = json_decode ( $content );
-	
-	if (! is_null ( $json_data->{'error'} )) {
-		$list_html = '<p>' . htmlspecialchars ( $json_data->{'error'} ) . '</p>';
+	if ($options ['debug'] == 'on') {
+		$list_html = '<a href="' . $fetch_url . '">' . $fetch_url . '</a>';
 	} else {
-		if ($options['style_me'] == 'on') {
-			$list_html = '<style type="text/css">'
-				. '.fa-cioc {width:1em; margin-right:0.25em; text-align:center;}'
-				. '.dt-cioc {margin-top:1.5em; margin-bottom:0.5em; font-size: 110%;}'
-				. '.dd-cioc {margin-left:1.5em; margin-bottom:0.5em;}'
-				. '.org-description {margin-bottom:0.75em;}'
-				. '.atgoeshere::before {content:\' [at] \';}'
-				. '</style>';
-		} else {
-			$list_html = '';
-		}
-		
-		if ($options['debug'] == 'on') {
-			$list_html .= '<a href="' . $fetch_url . '">' . $fetch_url . '</a>';
-		}
-		
-		$list_html .= '<dl' . ($options['list_class'] ? ' class="' . esc_attr ( $options['list_class'] ) . '"' : '') . ($options['list_id'] ? ' id="' . esc_attr ( $options['list_id'] ) . '"' : '') . '>';
-		
-		foreach ( $json_data->{'recordset'} as $list_entry ) {
-			$list_html .= '<dt class="org-name dt-cioc">'
-				. '<a href="' . $options['url'] . urldecode ( $list_entry->{'search'} ) . '">' . htmlspecialchars ( $list_entry->{'name'} ) . '</a>'
-				. ($options['type'] == 'newest' ? ' (' . htmlspecialchars ( $list_entry->{'date'} ) . ')' : '') . '</dt>';
-			if ($options['description'] == 'on' and $list_entry->{'description'}) {
-				$list_html .= '<dd class="org-description dd-cioc">'
-					. htmlspecialchars ( $list_entry->{'description'} )
-					. '</dd>';
-			}
-			if ($options['address'] == 'on' and ($list_entry->{'address'} || $list_entry->{'location'})) {
-				$list_html .= '<dd class="org-address dd-cioc">' 
-					. ($options['has_fa'] == 'on' ? '<i class="fa fa-map-marker fa-cioc" aria-hidden="true"></i> ' : '')
-					. htmlspecialchars ( $list_entry->{'address'} ? $list_entry->{'address'} : $list_entry->{'location'})
-					. '</dd>';
-			}
-			if ($options['email'] == 'on' and $list_entry->{'email'}) {
-				$list_html .= '<dd class="org-email dd-cioc">'
-					. ($options['has_fa'] == 'on' ? '<i class="fa fa-envelope fa-cioc" aria-hidden="true"></i> ' : '')
-					. str_replace ( '@', '<span class="atgoeshere"></span>', htmlspecialchars ( $list_entry->{'email'} ) )
-					. '</dd>';
-			}
-			if ($options['web'] == 'on' and $list_entry->{'web'}) {
-				if (substr( $list_entry->{'web'}, 0, 4 ) === "http") {
-					$web_link = $list_entry->{'web'};
-				} else {
-					$web_link = 'http://' . $list_entry->{'web'};
-				}
-				$list_html .= '<dd class="org-web dd-cioc">'
-					. ($options['has_fa'] == 'on' ? '<i class="fa fa-link fa-cioc" aria-hidden="true"></i> ' : '')
-					. '<a href="' . $web_link . '">' . $list_entry->{'web'} . '</a>'
-					. '</dd>';
-			}
-			if ($options['officephone'] == 'on' and $list_entry->{'officephone'}) {
-				$list_html .= '<dd class="org-phone dd-cioc">'
-					. ($options['has_fa'] == 'on' ? '<i class="fa fa-phone fa-cioc" aria-hidden="true"></i> ' : '')
-					. $list_entry->{'officephone'}
-					. '</dd>';
-			}
-			if ($options['hours'] == 'on' and $list_entry->{'hours'}) {
-				$list_html .= '<dd class="org-hours dd-cioc">'
-					. ($options['has_fa'] == 'on' ? '<i class="fa fa-calendar-o fa-cioc" aria-hidden="true"></i> ' : '')
-					. $list_entry->{'hours'}
-					. '</dd>';
-			}
-		}
-		$list_html .= '</dl>';
+		$list_html = '';
 	}
+	
+	$response = wp_remote_get( $fetch_url );
+	if (wp_remote_retrieve_response_code($response) != 200) {
+		$list_html .= '<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>';
+	} else {
+		$content = wp_remote_retrieve_body($response);		
+		$json_data = json_decode ( $content );
+	
+		if (! is_null ( $json_data->{'error'} )) {
+			$list_html = '<p>' . htmlspecialchars ( $json_data->{'error'} ) . '</p>';
+		} else {
+			if ($options['style_me'] == 'on') {
+				$list_html = '<style type="text/css">'
+					. '.fa-cioc {width:1em; margin-right:0.25em; text-align:center;}'
+					. '.dt-cioc {margin-top:1.5em; margin-bottom:0.5em; font-size: 110%;}'
+					. '.dd-cioc {margin-left:1.5em; margin-bottom:0.5em;}'
+					. '.org-description {margin-bottom:0.75em;}'
+					. '.atgoeshere::before {content:\' [at] \';}'
+					. '</style>';
+			} else {
+				$list_html = '';
+			}
 
+			if ($options['debug'] == 'on') {
+				$list_html .= '<a href="' . $fetch_url . '">' . $fetch_url . '</a>';
+			}
+
+			$list_html .= '<dl' . ($options['list_class'] ? ' class="' . esc_attr ( $options['list_class'] ) . '"' : '') . ($options['list_id'] ? ' id="' . esc_attr ( $options['list_id'] ) . '"' : '') . '>';
+
+			foreach ( $json_data->{'recordset'} as $list_entry ) {
+				$list_html .= '<dt class="org-name dt-cioc">'
+					. '<a href="' . $options['url'] . urldecode ( $list_entry->{'search'} ) . '">' . htmlspecialchars ( $list_entry->{'name'} ) . '</a>'
+					. ($options['type'] == 'newest' ? ' (' . htmlspecialchars ( $list_entry->{'date'} ) . ')' : '') . '</dt>';
+				if ($options['description'] == 'on' and $list_entry->{'description'}) {
+					$list_html .= '<dd class="org-description dd-cioc">'
+						. htmlspecialchars ( $list_entry->{'description'} )
+						. '</dd>';
+				}
+				if ($options['address'] == 'on' and ($list_entry->{'address'} || $list_entry->{'location'})) {
+					$list_html .= '<dd class="org-address dd-cioc">' 
+						. ($options['has_fa'] == 'on' ? '<i class="fa fa-map-marker fa-cioc" aria-hidden="true"></i> ' : '')
+						. htmlspecialchars ( $list_entry->{'address'} ? $list_entry->{'address'} : $list_entry->{'location'})
+						. '</dd>';
+				}
+				if ($options['email'] == 'on' and $list_entry->{'email'}) {
+					$list_html .= '<dd class="org-email dd-cioc">'
+						. ($options['has_fa'] == 'on' ? '<i class="fa fa-envelope fa-cioc" aria-hidden="true"></i> ' : '')
+						. str_replace ( '@', '<span class="atgoeshere"></span>', htmlspecialchars ( $list_entry->{'email'} ) )
+						. '</dd>';
+				}
+				if ($options['web'] == 'on' and $list_entry->{'web'}) {
+					if (substr( $list_entry->{'web'}, 0, 4 ) === "http") {
+						$web_link = $list_entry->{'web'};
+					} else {
+						$web_link = 'http://' . $list_entry->{'web'};
+					}
+					$list_html .= '<dd class="org-web dd-cioc">'
+						. ($options['has_fa'] == 'on' ? '<i class="fa fa-link fa-cioc" aria-hidden="true"></i> ' : '')
+						. '<a href="' . $web_link . '">' . $list_entry->{'web'} . '</a>'
+						. '</dd>';
+				}
+				if ($options['officephone'] == 'on' and $list_entry->{'officephone'}) {
+					$list_html .= '<dd class="org-phone dd-cioc">'
+						. ($options['has_fa'] == 'on' ? '<i class="fa fa-phone fa-cioc" aria-hidden="true"></i> ' : '')
+						. $list_entry->{'officephone'}
+						. '</dd>';
+				}
+				if ($options['hours'] == 'on' and $list_entry->{'hours'}) {
+					$list_html .= '<dd class="org-hours dd-cioc">'
+						. ($options['has_fa'] == 'on' ? '<i class="fa fa-calendar-o fa-cioc" aria-hidden="true"></i> ' : '')
+						. $list_entry->{'hours'}
+						. '</dd>';
+				}
+			}
+			$list_html .= '</dl>';
+		}
+	}
+	
 	return $list_html;
 }
 

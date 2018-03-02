@@ -2,7 +2,7 @@
 /*
  * Plugin Name: CIOC Volunteer Opportunity Feeds
  * Description: This plugin provides integration shortcodes for feeds from the CIOC Software Volunteer Opportunities module
- * Version: 1.0.3
+ * Version: 1.1
  * Author: Katherine Lambacher
  * Author URI: http://www.kclsoftware.com
  * License: Apache 2.0
@@ -38,9 +38,21 @@ function cioc_vol_search_feed_list($atts) {
 		$options['viewtype'] = NULL;
 	}
 
-	$action_types_list = array('popular_orgs','popular_interests');
-	$action_types_records = array('newest','org','interest');
-	$action_types = array_merge($action_types_list, $action_types_records);
+	$action_types_list = array(
+		'popular_orgs',
+		'popular_interests'
+	);
+	
+	$action_types_records = array(
+		'newest',
+		'org',
+		'interest'
+	);
+	
+	$action_types = array_merge(
+		$action_types_list,
+		$action_types_records
+	);
 
 	if (! in_array ( $options ['type'], $action_types )) {
 		$options ['type'] = $default_type;
@@ -79,7 +91,6 @@ function cioc_vol_search_feed_list($atts) {
 			$fetch_url .= '&code=' . urlencode($options['code']);
 		}
 	}
-	
 	
 	if ($options ['debug'] == 'on') {
 		$list_html = '<a href="' . $fetch_url . '">' . $fetch_url . '</a>';

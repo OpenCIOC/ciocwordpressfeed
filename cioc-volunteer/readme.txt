@@ -1,7 +1,7 @@
 === CIOC Volunteer Opportunity Feeds ===
 Contributors: klambacher
 Requires at least: 4.0.1
-Tested up to: 4.7.2
+Tested up to: 4.9.4
 Stable tag: trunk
 License: Apache 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0
