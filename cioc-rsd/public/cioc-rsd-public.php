@@ -126,8 +126,17 @@ class CIOC_RSD_Public {
 	}
 
 	public function enqueue_scripts() {
+		$options = get_option ( 'ciocrsd_settings' );
+
+		if ($options) {
+			$no_bs = isset($options['ciocrsd_has_bootstrap']) ? $options['ciocrsd_has_bootstrap'] : 0;
+		}
+
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cioc-rsd-public.js', array( 'jquery' ), $this->version, TRUE );
-		wp_enqueue_script( 'bs-modal-script', plugin_dir_url( __FILE__ ) . 'js/bootstrap-modal.min.js', array( 'jquery' ), $this->version, TRUE );
+
+		if (!$no_bs) {
+			wp_enqueue_script( 'bs-modal-script', plugin_dir_url( __FILE__ ) . 'js/bootstrap-modal.min.js', array( 'jquery' ), $this->version, TRUE );
+		}
 	}
 	
 	public function register_shortcodes() {
