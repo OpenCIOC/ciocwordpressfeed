@@ -121,11 +121,22 @@ class CIOC_RSD_Public {
 		}
 		if (!$no_bs) {
 			wp_enqueue_style( 'bs-glyphicons', 'https://d3byedob0d0n2o.cloudfront.net/bootstrap-3.3.5/glyphicons.css');
+			wp_enqueue_style( 'bs-modal',  $this->parent->plugin_main_dir . 'css/bootstrap-modal.min.css', array(), $this->version);
 		}
 	}
 
 	public function enqueue_scripts() {
+		$options = get_option ( 'ciocrsd_settings' );
+
+		if ($options) {
+			$no_bs = isset($options['ciocrsd_has_bootstrap']) ? $options['ciocrsd_has_bootstrap'] : 0;
+		}
+
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cioc-rsd-public.js', array( 'jquery' ), $this->version, TRUE );
+
+		if (!$no_bs) {
+			wp_enqueue_script( 'bs-modal-script', plugin_dir_url( __FILE__ ) . 'js/bootstrap-modal.min.js', array( 'jquery' ), $this->version, TRUE );
+		}
 	}
 	
 	public function register_shortcodes() {
@@ -403,11 +414,14 @@ class CIOC_RSD_Public {
 			
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 			
-			$response = wp_remote_get( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params, array('headers' => $fetch_headers));
+			$response = wp_remote_get( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30));
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable publinc (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable public (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 				<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 			} else {
 				$content = wp_remote_retrieve_body($response);		
 				$json_data = json_decode ( $content );
@@ -467,12 +481,15 @@ class CIOC_RSD_Public {
 				if (!preg_match('/^[A-Za-z]{3}[0-9]{4,5}$/', $num)) {
 					$return_html = '<div class="ciocrsd-alert">Error: Invalid Record Number</div>' . $num;
 				} else {
-					$response = wp_remote_get($fetch_url . '/rpc/record/' . $num . '?texttohtml=1&' . $fetch_url_params, array('headers' => $fetch_headers)); 
+					$response = wp_remote_get($fetch_url . '/rpc/record/' . $num . '?texttohtml=1&' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30)); 
 
 					if (wp_remote_retrieve_response_code($response) != 200) {
 						?>
-							<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+							<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 						<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 					} else {
 						$content = wp_remote_retrieve_body($response);		
 						$json_data = json_decode ( $content );
@@ -619,12 +636,15 @@ class CIOC_RSD_Public {
 	
 			$fetch_url_params = $this->process_fetch_url_params($sc_options, $add_params);
 	
-			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers));
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30));
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-						<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+						<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 						<?=$fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params ?>
 					<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 				} else {
 					$content = wp_remote_retrieve_body($response);		
 					$json_data = json_decode ( $content );
@@ -774,12 +794,15 @@ class CIOC_RSD_Public {
 				} else {
 					$fetch_url_params = $this->process_fetch_url_params($sc_options, $search_params);
 					
-					$response = wp_remote_get($fetch_url . '/rpc/orgsearch.asp?' . $fetch_url_params, array('headers' => $fetch_headers));
+					$response = wp_remote_get($fetch_url . '/rpc/orgsearch.asp?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30));
 					if (wp_remote_retrieve_response_code($response) != 200) {
 						?>
-							<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+							<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 							<div style="display:none;"><?=$fetch_url . '/rpc/orgsearch.asp?' . $fetch_url_params ?></div> 
 						<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 					} else {
 						$content = wp_remote_retrieve_body($response);		
 						$json_data = json_decode ( $content );
@@ -909,11 +932,14 @@ class CIOC_RSD_Public {
 						
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 			
-			$response = wp_remote_get( $fetch_url . '/rpc/agegrouplist?' . $fetch_url_params, array('headers' => $fetch_headers) );
+			$response = wp_remote_get( $fetch_url . '/rpc/agegrouplist?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30) );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 				<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 			} else {
 				$content = wp_remote_retrieve_body($response);		
 				$json_data = json_decode ( $content );
@@ -1008,11 +1034,14 @@ class CIOC_RSD_Public {
 				
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 				
-			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers) );
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30) );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 				<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 			} else {
 				$content = wp_remote_retrieve_body($response);		
 				$json_data = json_decode ( $content );
@@ -1086,11 +1115,14 @@ class CIOC_RSD_Public {
 				
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 				
-			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers) );
+			$response = wp_remote_get( $fetch_url . '/rpc/quicklist' . $pubcode_path . '?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30) );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 				<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 			} else {
 				$content = wp_remote_retrieve_body($response);		
 				$json_data = json_decode ( $content );
@@ -1141,7 +1173,8 @@ class CIOC_RSD_Public {
 				'viewtype' => NULL,
 				'ln' => NULL,
 				'limitcmtype' => NULL,
-				'shortplaceholder' => FALSE
+				'shortplaceholder' => FALSE,
+				'cmpromptunfilled' => FALSE
 		), $atts );
 		
 		return $this->community_dropdown($sc_options);
@@ -1163,14 +1196,18 @@ class CIOC_RSD_Public {
 		if (!filter_var ( $fetch_url, FILTER_VALIDATE_URL ) === FALSE && !empty($fetch_headers)) {
 
 			$limit_type = $sc_options['limitcmtype'];
+			$prompt_unfilled = $sc_options['cmpromptunfilled'];
 
 			$fetch_url_params = $this->process_fetch_url_params($sc_options);
 	
-			$response = wp_remote_get( $fetch_url . '/jsonfeeds/community_generator.asp?' . $fetch_url_params, array('headers' => $fetch_headers) );
+			$response = wp_remote_get( $fetch_url . '/jsonfeeds/community_generator.asp?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30) );
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 				<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
 			} else {
 				$content = wp_remote_retrieve_body($response);		
 				$json_data = json_decode ( $content );
@@ -1191,7 +1228,12 @@ class CIOC_RSD_Public {
 								$drop_down_title = "Service Area";
 							}
 						}
-						$return_html .= '<select name="CMID" class="form-control">'
+						if($prompt_unfilled) {
+							$prompt_unfilled = ' data-unfilled-prompt="true"';
+						} else {
+							$prompt_unfilled = '';
+						}
+						$return_html .= '<select name="CMID" class="form-control"' . $prompt_unfilled . '>'
 							. '<option value=""> -- ' . $placeholder_text . $drop_down_title . ' -- </option>'; 
 						foreach ( $json_data as $record_row ) {
 							$record_id = (isset($record_row->{'chkid'}) ? $record_row->{'chkid'} : NULL);
@@ -1231,7 +1273,8 @@ class CIOC_RSD_Public {
 					'limitcmtype' => NULL,
 					'multiformid' => '',
 					'shortplaceholder' => FALSE,
-					'clearbutton' => FALSE
+					'clearbutton' => FALSE,
+					'cmpromptunfilled' => FALSE
 			), $atts );
 				
 			$this->check_domain($sc_options, 'cic');

@@ -122,6 +122,8 @@ class CIOC_RSD {
 
 			if (!empty($fetch_account) && !empty($fetch_password)) {
 				$headers = array('Authorization' => 'Basic ' . base64_encode($fetch_account . ':' . $fetch_password));
+			} else {
+					echo "<!-- no auth -->";
 			}
 		}
 
@@ -198,11 +200,15 @@ class CIOC_RSD {
 			
 			$fetch_url_params = process_fetch_url_params($sc_options);
 			
-			$response = wp_remote_get( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params, array('headers' => $fetch_headers));
+			$response = wp_remote_get( $fetch_url . '/rpc/countall/' . $sc_options['domain'] . '?' . $fetch_url_params, array('headers' => $fetch_headers, 'timeout' => 30));
 			if (wp_remote_retrieve_response_code($response) != 200) {
 				?>
-					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_message($response) ?>)</div>
+					<div class="ciocrsd-alert">WARNING: Authorization failed or content unavailable (<?= wp_remote_retrieve_response_code( $response )?> <?= wp_remote_retrieve_response_message($response) ?>)</div>
 				<?php
+				if (is_wp_error($response)) {
+					echo "<!-- " . $response->get_error_message() . " -->";
+				}
+
 			} else {
 				$content = wp_remote_retrieve_body($response);		
 				$json_data = json_decode ( $content );
