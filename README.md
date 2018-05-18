@@ -1,7 +1,7 @@
 # ciocwordpressfeed
 WordPress Plugin for displaying simple data feeds from CIOC Software
 
-To use the CIOC Volunteer Plugin in WordPress, download 
+To use the CIOC Basic Feeds Plugin in WordPress, download 
 
 https://github.com/OpenCIOC/ciocwordpressfeed/raw/master/cioc-volunteer.zip 
 
