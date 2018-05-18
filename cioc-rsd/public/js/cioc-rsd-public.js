@@ -28,6 +28,7 @@
 	 * Although scripts in the WordPress core, Plugins and Themes may be
 	 * practising this, we should strive to set a better example in our own work.
 	 */
+	
 	var start_cm_unfilled_detector = function() {
 		var handle_submit = function(evt) {
 			var self = $(this), unfilled_cm = self.find("select[data-unfilled-prompt=true]");
@@ -40,7 +41,7 @@
 			}
 
 			evt.preventDefault();
-			evt.stopPropagation()	
+			evt.stopPropagation();
 
 
 			var modal = $('#cm-unfilled-prompt');
@@ -77,11 +78,16 @@
 
 
 		};
-		$(document).on('submit', 'form', handle_submit)
+		$(document).on('submit', 'form', handle_submit);
 
 	};
 	$(function() {
-		start_cm_unfilled_detector()
+		start_cm_unfilled_detector();
+		
+		$('.ciocrsd-category-button').on('click',function() {
+			$('#PBIDbtn').val(this.value);
+		});
+		
 		var map_canvas = $('#map_canvas'), 
 			api_key = $('.ciocrsd-record-detail').data('mapsKey');
 		if (!map_canvas.length || !api_key) {

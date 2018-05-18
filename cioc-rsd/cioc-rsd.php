@@ -3,7 +3,7 @@
 /**
  * Plugin Name: CIOC Remote Search and Details
  * Description: This plugin provides integration with the CIOC Remote Search and Details API
- * Version: 1.0.0
+ * Version: 1.1
  * Author: Katherine Lambacher
  * Author URI: http://www.kclsoftware.com
  * License: Apache 2.0

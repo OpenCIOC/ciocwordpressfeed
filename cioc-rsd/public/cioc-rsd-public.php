@@ -1149,7 +1149,7 @@ class CIOC_RSD_Public {
 					}
 					$buttonclass = ' class="'. $buttonclass . '"';
 					if (isset($json_data->{'quicklist'}) && count($json_data->{'quicklist'}) > 0) {
-						$return_html .= '<div class="row ciocrsd-category-row">';
+						$return_html .= '<input type="hidden" id="PBIDbtn" name="'. $type . '" value=""><div class="row ciocrsd-category-row">';
 						$gridclass = $sc_options['gridclass'];
 						foreach ( $json_data->{'quicklist'} as $record_row ) {
 							$record_id = (isset($record_row->{$id_type}) ? $record_row->{$id_type} : NULL);
